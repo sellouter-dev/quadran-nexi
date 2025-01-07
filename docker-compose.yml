@@ -1,0 +1,64 @@
+services:
+  redis:
+    image: redis:alpine
+    container_name: quadran_nexi_redis
+    platform: linux/arm64
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - quadran_nexi_net
+
+  oracle:
+    image: gvenzl/oracle-free:latest-arm64
+    container_name: quadran_nexi_oracle
+    platform: linux/arm64
+    restart: unless-stopped
+    environment:
+      ORACLE_DATABASE: quadran_nexi
+      ORACLE_USER: root
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    networks:
+      - quadran_nexi_net
+
+  sftp:
+    build:
+      context: .
+      dockerfile: Dockerfile.sftp
+    container_name: quadran_nexi_sftp
+    platform: linux/arm64
+    ports:
+      - "22:22"
+    volumes:
+      - ./sftp_data:/home/ftpuser/upload:rw
+    environment:
+      SFTP_USERS: "ftpuser::1001:1001:upload"
+    restart: unless-stopped
+    networks:
+      - quadran_nexi_net
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.laravel
+    container_name: quadran_nexi_php
+    platform: linux/arm64
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8080:8080"
+    networks:
+      - quadran_nexi_net
+
+volumes:
+  oracle_data:
+  sftp_data:
+
+networks:
+  quadran_nexi_net:
+    driver: bridge

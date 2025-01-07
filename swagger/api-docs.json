@@ -1,0 +1,355 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Quadran - Nexi API",
+        "description": "This is the API documentation for the Quadran - Nexi API.",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "description": "Login a user and return a token",
+                "operationId": "c5e838284c7f343f0e5e5fd589161c96",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login successful"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "your-api-token"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid credentials"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "The email field is required."
+                                                ],
+                                                "password": [
+                                                    "The password field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/seller-inventory-items": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Get Seller Inventory Items",
+                "description": "Retrieve a list of inventory items with optional filters.",
+                "operationId": "41d0b114bdc90577bf08a05bd0ef4cca",
+                "parameters": [
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Start date for filtering inventory items. Format: 2024-01-01",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "End date for filtering inventory items. Format: 2024-01-01",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fnsku",
+                        "in": "query",
+                        "description": "Filter by FNSKU",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "asin",
+                        "in": "query",
+                        "description": "Filter by ASIN",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "msku",
+                        "in": "query",
+                        "description": "Filter by MSKU",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of inventory items",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date"
+                                                    },
+                                                    "fnsku": {
+                                                        "type": "string"
+                                                    },
+                                                    "asin": {
+                                                        "type": "string"
+                                                    },
+                                                    "msku": {
+                                                        "type": "string"
+                                                    },
+                                                    "title": {
+                                                        "type": "string"
+                                                    },
+                                                    "disposition": {
+                                                        "type": "string"
+                                                    },
+                                                    "starting_warehouse_balance": {
+                                                        "type": "integer"
+                                                    },
+                                                    "in_transit_between_warehouses": {
+                                                        "type": "integer"
+                                                    },
+                                                    "receipts": {
+                                                        "type": "integer"
+                                                    },
+                                                    "customer_shipments": {
+                                                        "type": "integer"
+                                                    },
+                                                    "customer_returns": {
+                                                        "type": "integer"
+                                                    },
+                                                    "vendor_returns": {
+                                                        "type": "integer"
+                                                    },
+                                                    "warehouse_transfer_in_out": {
+                                                        "type": "integer"
+                                                    },
+                                                    "found": {
+                                                        "type": "integer"
+                                                    },
+                                                    "lost": {
+                                                        "type": "integer"
+                                                    },
+                                                    "damaged": {
+                                                        "type": "integer"
+                                                    },
+                                                    "disposed": {
+                                                        "type": "integer"
+                                                    },
+                                                    "other_events": {
+                                                        "type": "integer"
+                                                    },
+                                                    "ending_warehouse_balance": {
+                                                        "type": "integer"
+                                                    },
+                                                    "unknown_events": {
+                                                        "type": "integer"
+                                                    },
+                                                    "location": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "actual_count": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "limit": {
+                                                    "type": "integer",
+                                                    "example": 100
+                                                },
+                                                "page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "type": "integer"
+                                        },
+                                        "file": {
+                                            "type": "string"
+                                        },
+                                        "line": {
+                                            "type": "integer"
+                                        },
+                                        "trace": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Endpoints for authentication."
+        },
+        {
+            "name": "Inventory",
+            "description": "Endpoints for managing and retrieving inventory items."
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "Bearer": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+                "description": "Enter token in format (Bearer <token>)"
+            }
+        }
+    }
+}

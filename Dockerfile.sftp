@@ -1,0 +1,14 @@
+# Usa l'immagine base per SFTP
+FROM atmoz/sftp:latest
+
+# Copia la configurazione del server SFTP
+COPY sftp_config.sh /etc/sftp_config.sh
+
+# Imposta i permessi di esecuzione sullo script di configurazione
+RUN chmod +x /etc/sftp_config.sh
+
+# Crea la directory di upload e imposta i permessi corretti
+RUN mkdir -p /home/ftpuser/upload && chmod 700 /home/ftpuser/upload
+
+# Esegui lo script di configurazione all'avvio
+CMD ["/etc/sftp_config.sh"]

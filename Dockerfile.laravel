@@ -1,0 +1,62 @@
+FROM php:8.3-apache
+
+# Installa dipendenze generiche
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libaio1 \
+    libzip-dev \
+    libssl-dev \
+    libkrb5-dev && \
+    docker-php-ext-install zip pdo_mysql
+
+# Copia e installa Oracle Instant Client
+COPY ./oracle_client/instantclient-basic-linux.arm64-19.25.0.0.0dbru.zip /tmp/instantclient-basic.zip
+COPY ./oracle_client/instantclient-sdk-linux.arm64-19.25.0.0.0dbru.zip /tmp/instantclient-sdk.zip
+RUN unzip -o /tmp/instantclient-basic.zip -d /opt/oracle && \
+    unzip -o /tmp/instantclient-sdk.zip -d /opt/oracle && \
+    ln -s /opt/oracle/instantclient_19_25/libclntsh.so /usr/lib/libclntsh.so && \
+    ln -s /opt/oracle/instantclient_19_25/libclntshcore.so /usr/lib/libclntshcore.so && \
+    ln -s /opt/oracle/instantclient_19_25/libocci.so /usr/lib/libocci.so && \
+    rm /tmp/instantclient-basic.zip /tmp/instantclient-sdk.zip && \
+    echo "/opt/oracle/instantclient_19_25" > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    ldconfig
+
+# Configura e abilita l'estensione OCI8
+RUN docker-php-ext-configure oci8 --with-oci8=instantclient,/opt/oracle/instantclient_19_25 && \
+    docker-php-ext-install oci8
+
+# Configura Apache
+RUN echo "ServerName localhost" >> /etc/apache2/conf-available/servername.conf && \
+    a2enconf servername && \
+    a2enmod rewrite
+
+# Imposta la directory di lavoro
+WORKDIR /var/www/html
+
+# Copia il contenuto del progetto
+COPY . /var/www/html
+
+# Installa Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Installa il pacchetto yajra/laravel-oci8
+RUN composer install --no-dev --optimize-autoloader && \
+    composer require yajra/laravel-oci8
+
+# Definisci manualmente la costante OCI_DEFAULT per prevenire errori
+RUN echo "if (!defined('OCI_DEFAULT')) { define('OCI_DEFAULT', 0); }" >> /usr/local/lib/php.ini
+
+# Imposta i permessi corretti
+RUN chown -R www-data:www-data /var/www/html && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Configura la document root di Apache
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!/var/www/html/public!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Esponi la porta 8080
+EXPOSE 8080
+
+# Comando di avvio di Apache
+CMD ["apache2-foreground"]
