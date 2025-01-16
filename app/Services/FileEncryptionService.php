@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use gnupg;
 use phpseclib3\Net\SFTP;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use gnupg;
+use phpseclib3\Crypt\PublicKeyLoader;
 
 class FileEncryptionService
 {
@@ -15,7 +16,9 @@ class FileEncryptionService
     protected $publicKeyPath;
     protected $gnupg;
     protected $publicKeyFingerprint;
-    
+    protected $privateKeyPathFTP;
+    protected $privateKey;
+
     /**
      * __construct
      *
@@ -27,6 +30,8 @@ class FileEncryptionService
         $this->sftpUsername = env('SFTP_USERNAME');
         $this->sftpPassword = env('SFTP_PASSWORD');
         $this->publicKeyPath = storage_path('app/keys/public.asc');
+        $this->privateKeyPathFTP = storage_path('app/keys/private.key');
+        $this->privateKey = PublicKeyLoader::load(file_get_contents($this->privateKeyPathFTP));
 
         putenv("GNUPGHOME=" . storage_path('app/keys'));
         if (!class_exists('gnupg')) {
@@ -34,10 +39,10 @@ class FileEncryptionService
             throw new \Exception('L\'estensione PHP gnupg non è installata.');
         }
         $this->gnupg = new gnupg();
-        
+
         $this->importPublicKey();
     }
-    
+
     /**
      * importPublicKey
      *
@@ -54,7 +59,7 @@ class FileEncryptionService
 
         $this->publicKeyFingerprint = $importResult['fingerprint'];
     }
-    
+
     /**
      * encrypt
      *
@@ -65,9 +70,9 @@ class FileEncryptionService
     {
         try {
             $this->gnupg->addencryptkey($this->publicKeyFingerprint);
-            
+
             $encrypted = $this->gnupg->encrypt($data);
-            
+
             if ($encrypted === false) {
                 throw new \Exception('La crittografia è fallita: ' . $this->gnupg->geterror());
             }
@@ -84,7 +89,7 @@ class FileEncryptionService
             return false;
         }
     }
-    
+
     /**
      * upload
      *
@@ -92,7 +97,7 @@ class FileEncryptionService
      * @param  mixed $remoteFilePath
      * @return void
      */
-    public function upload($encryptedData, $remoteFilePath)
+    private function upload($encryptedData, $remoteFilePath)
     {
         try {
             Log::info('Tentativo di connessione al server SFTP.', [
@@ -107,10 +112,10 @@ class FileEncryptionService
                 return false;
             }
 
-            if(env("CRYPT_DATA")){
+            if (env("CRYPT_DATA")) {
                 $remoteFilePath .= '.enc';
             }
-            
+
             Log::info('Connessione al server SFTP riuscita, tentativo di caricamento del file: ' . $remoteFilePath);
             if (!$sftp->put("/upload/" . $remoteFilePath, $encryptedData)) {
                 Log::error('Errore durante il caricamento del file criptato.');
@@ -129,7 +134,29 @@ class FileEncryptionService
             return false;
         }
     }
-    
+    /**
+     * generateSemaphoreFile
+     *
+     * @param  string $filePath
+     * @param  bool $withChecksum
+     * @return string
+     */
+    private function generateSemaphoreFile(string $filePath, bool $withChecksum = false): string
+    {
+        $semaphoreFilePath = $filePath . '.check'; //
+        $content = '';
+
+        if ($withChecksum) {
+            $content = hash_file('sha256', $filePath);
+        }
+
+        if (file_put_contents($semaphoreFilePath, $content) === false) {
+            throw new \Exception("Errore durante la generazione del file semaforo: {$semaphoreFilePath}");
+        }
+
+        return $semaphoreFilePath;
+    }
+
     /**
      * saveFile
      *
@@ -140,7 +167,7 @@ class FileEncryptionService
     {
         try {
             ini_set('max_execution_time', 300);
-            
+
             $fileContent = file_get_contents($filePath);
             $remoteFilePath = basename($filePath);
 
@@ -149,27 +176,21 @@ class FileEncryptionService
                 return response()->json(['message' => 'Errore durante la lettura del file.'], 500);
             }
 
-            
-            if(env("CRYPT_DATA")){
+
+            if (env("CRYPT_DATA")) {
                 $encryptedData = $this->encrypt($fileContent);
                 if (!$encryptedData) {
                     return response()->json(['message' => 'Errore durante la crittografia del file.'], 500);
                 }
-    
-                
-                $result = $this->upload($encryptedData, $remoteFilePath);
             }
-            else{
-                $result = $this->upload($fileContent, $remoteFilePath);
-            }
-            
+            $semaphorePath = $this->generateSemaphoreFile($filePath, true);
 
-            if (!$result) {
-                Log::error('Errore durante il caricamento del file criptato.');
-                return response()->json(['message' => 'Errore durante il caricamento del file criptato.'], 500);
+            // Carica il file e il file semaforo sul server SFTP
+            if (!$this->upload($fileContent, $remoteFilePath) || !$this->upload(file_get_contents($semaphorePath), $semaphorePath)) {
+                throw new \Exception('Errore durante il caricamento del file o del semaforo.');
             }
 
-            return response()->json(['message' => 'File criptato e caricato con successo.']);
+            return response()->json(['message' => 'File e semaforo caricati con successo.']);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),

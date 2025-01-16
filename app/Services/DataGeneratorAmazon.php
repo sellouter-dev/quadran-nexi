@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
 class DataGeneratorAmazon
@@ -24,7 +25,7 @@ class DataGeneratorAmazon
     public function callVatCalculationApi($page)
     {
         try {
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $apiUrl = $this->API_URL . '/vat-calculation';
             return $client->post($apiUrl, [
                 'form_params' => [
@@ -48,7 +49,7 @@ class DataGeneratorAmazon
     public function callFlatfileVatInvoiceDataApi($page)
     {
         try {
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $apiUrl = $this->API_URL . '/flatfile-vat-invoice-data';
             Log::info('API URL: ' . $apiUrl);
 
@@ -73,7 +74,7 @@ class DataGeneratorAmazon
     public function callCollectionsDataApi($page)
     {
         try {
-            $client = new \GuzzleHttp\Client();
+            $client = new Client();
             $apiUrl = $this->API_URL . '/collections-data';
 
             return $client->post($apiUrl, [

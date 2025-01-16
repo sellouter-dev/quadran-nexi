@@ -17,7 +17,7 @@
         "laravel/tinker": "^2.9",
         "laravel/vapor-core": "^2.37",
         "phpseclib/phpseclib": "^3.0",
-        "yajra/laravel-oci8": "^11.6",
+        "yajra/laravel-oci8": "^11.0",
         "zircote/swagger-php": "^4.9"
     },
     "require-dev": {

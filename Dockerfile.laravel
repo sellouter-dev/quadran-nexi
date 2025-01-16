@@ -1,16 +1,26 @@
+# Usa l'immagine base PHP 8.3 con Apache
 FROM php:8.3-apache
 
-# Installa dipendenze generiche
+# Installa dipendenze generiche e librerie necessarie
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libaio1 \
     libzip-dev \
     libssl-dev \
-    libkrb5-dev && \
+    libkrb5-dev \
+    build-essential \
+    libaio-dev \
+    freetds-dev && \
     docker-php-ext-install zip pdo_mysql
 
-# Copia e installa Oracle Instant Client
+# Configura Oracle Instant Client
+ENV LD_LIBRARY_PATH="/opt/oracle/instantclient_19_25/"
+ENV ORACLE_HOME="/opt/oracle/instantclient_19_25/"
+ENV OCI_HOME="/opt/oracle/instantclient_19_25/"
+ENV OCI_LIB_DIR="/opt/oracle/instantclient_19_25/"
+ENV OCI_INCLUDE_DIR="/opt/oracle/instantclient_19_25/sdk/include"
+ENV OCI_VERSION=19
 COPY ./oracle_client/instantclient-basic-linux.arm64-19.25.0.0.0dbru.zip /tmp/instantclient-basic.zip
 COPY ./oracle_client/instantclient-sdk-linux.arm64-19.25.0.0.0dbru.zip /tmp/instantclient-sdk.zip
 RUN unzip -o /tmp/instantclient-basic.zip -d /opt/oracle && \
@@ -19,7 +29,7 @@ RUN unzip -o /tmp/instantclient-basic.zip -d /opt/oracle && \
     ln -s /opt/oracle/instantclient_19_25/libclntshcore.so /usr/lib/libclntshcore.so && \
     ln -s /opt/oracle/instantclient_19_25/libocci.so /usr/lib/libocci.so && \
     rm /tmp/instantclient-basic.zip /tmp/instantclient-sdk.zip && \
-    echo "/opt/oracle/instantclient_19_25" > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    echo /opt/oracle/instantclient_19_25 > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     ldconfig
 
 # Configura e abilita l'estensione OCI8
@@ -40,12 +50,12 @@ COPY . /var/www/html
 # Installa Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Configura il file PHP ini per la produzione
+RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+
 # Installa il pacchetto yajra/laravel-oci8
 RUN composer install --no-dev --optimize-autoloader && \
     composer require yajra/laravel-oci8
-
-# Definisci manualmente la costante OCI_DEFAULT per prevenire errori
-RUN echo "if (!defined('OCI_DEFAULT')) { define('OCI_DEFAULT', 0); }" >> /usr/local/lib/php.ini
 
 # Imposta i permessi corretti
 RUN chown -R www-data:www-data /var/www/html && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache

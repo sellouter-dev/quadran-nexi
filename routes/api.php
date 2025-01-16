@@ -20,6 +20,3 @@ Route::middleware('auth:sanctum')->get('/seller-inventory-items', [SellerInvento
 Route::middleware('auth:sanctum')->get('/download/vat-flat-file-invoice-data', [DownloadCSVController::class, 'downloadDataOfFlatfilevatinvoicedata']);
 Route::middleware('auth:sanctum')->get('/download/vat-calculations-computed', [DownloadCSVController::class, 'downloadDataCalculationComputed']);
 Route::middleware('auth:sanctum')->get('/download/vat-collections', [DownloadCSVController::class, 'downloadDataOfCollections']);
-
-
-
