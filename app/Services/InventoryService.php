@@ -16,7 +16,6 @@ class InventoryService extends ReportBaseService
     const AGGREGATED_BY_TIME_PERIOD = 'DAILY';
     const AGGREGATE_BY_LOCATION = 'COUNTRY';
 
-
     /**
      * Fetch the inventory report.
      *
@@ -27,7 +26,7 @@ class InventoryService extends ReportBaseService
     {
         try {
             $sellerConnector = $this->getConnector($credential);
-            if($sellerConnector == null) {
+            if ($sellerConnector == null) {
                 ResponseHandler::error('Failed to get seller connector.');
                 return;
             }
@@ -55,7 +54,6 @@ class InventoryService extends ReportBaseService
 
             $this->waitForReportCompletion($reportsApi, $reportId);
             $this->fetchReportData($reportsApi, $reportId, $credential);
-
         } catch (Exception $e) {
             ResponseHandler::error('failed to fetch inventory: ', [
                 'messages' => $e->getMessage(),
@@ -79,12 +77,11 @@ class InventoryService extends ReportBaseService
      */
     private function createReport(ReportsV20210630\Api $reportsApi, CreateReportSpecification $specifications): ?string
     {
-        try{
+        try {
             $report = $reportsApi->createReport($specifications)->body();
             $reportJson = json_decode($report, true);
             return $reportJson['reportId'] ?? null;
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             ResponseHandler::error('failed to create report: ', [
                 'code' => $e->getCode(),
                 'message' => $e->getMessage(),
@@ -94,7 +91,6 @@ class InventoryService extends ReportBaseService
             ]);
             return null;
         }
-
     }
 
     /**
@@ -105,7 +101,7 @@ class InventoryService extends ReportBaseService
      */
     protected function saveReportData(array $formattedReport): void
     {
-        try{
+        try {
             $formattedReport['date'] = Carbon::parse($formattedReport['date'])->format('Y-m-d');
 
             SellerInventoryItem::updateOrCreate(
@@ -119,8 +115,7 @@ class InventoryService extends ReportBaseService
                 ],
                 $formattedReport
             );
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             ResponseHandler::error('failed to save report: ', [
                 'code' => $e->getCode(),
                 'message' => $e->getMessage(),
@@ -129,7 +124,6 @@ class InventoryService extends ReportBaseService
                 'trace' => $e->getTraceAsString(),
             ]);
         }
-
     }
 
     /**
@@ -145,13 +139,13 @@ class InventoryService extends ReportBaseService
         $waitTime = 10;
 
         while ($attempt < 5) {
-            try{
+            try {
                 $result = $reportsApi->getReport($reportId)->body();
                 $resultJSON = json_decode($result, true);
                 $status = $resultJSON['processingStatus'] ?? 'UNKNOWN';
 
                 if ($status === 'DONE') {
-                    ResponseHandler::success('Report completed: '. $reportId);
+                    ResponseHandler::success('Report completed: ' . $reportId);
                     return;
                 }
 
@@ -163,9 +157,8 @@ class InventoryService extends ReportBaseService
                 sleep($waitTime);
                 $attempt++;
                 $waitTime *= 2;
-            }
-            catch(\Exception $e){
-                ResponseHandler::error('Failed to get report: '. $reportId, [
+            } catch (\Exception $e) {
+                ResponseHandler::error('Failed to get report: ' . $reportId, [
                     'messages' => $e->getMessage(),
                     'code' => $e->getCode(),
                     'file' => $e->getFile(),
@@ -187,7 +180,7 @@ class InventoryService extends ReportBaseService
      */
     private function fetchReportData(ReportsV20210630\Api $reportsApi, string $reportId, CustomerCredential $credential): void
     {
-        try{
+        try {
             $result = $reportsApi->getReport($reportId)->body();
             $resultJSON = json_decode($result, true);
             $documentId = $resultJSON['reportDocumentId'] ?? null;
@@ -208,9 +201,8 @@ class InventoryService extends ReportBaseService
 
             $reportCsv = gzdecode($reportZip);
             $this->saveCsvReport($reportCsv, $credential);
-        }
-        catch(\Exception $e){
-            ResponseHandler::error('Failed to fetch Report Data: '. $reportId, [
+        } catch (\Exception $e) {
+            ResponseHandler::error('Failed to fetch Report Data: ' . $reportId, [
                 'messages' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
@@ -218,6 +210,5 @@ class InventoryService extends ReportBaseService
                 'trace' => $e->getTraceAsString(),
             ]);
         }
-
     }
 }

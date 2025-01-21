@@ -5,10 +5,11 @@ namespace App\Services;
 use App\Models\InvoiceTrack;
 use App\Models\DataCollection;
 use Illuminate\Http\JsonResponse;
+use App\Models\SellerInventoryItem;
 use Illuminate\Support\Facades\Log;
+use App\Services\DataGeneratorAmazon;
 use App\Models\FlatfileVatInvoiceData;
 use App\Services\FileEncryptionService;
-use App\Services\DataGeneratorAmazon;
 
 class CSVGeneratorService
 {
@@ -19,6 +20,83 @@ class CSVGeneratorService
     {
         $this->fileEncryptionService = new FileEncryptionService();
         $this->dataGenerator = new DataGeneratorAmazon();
+    }
+
+    /**
+     * saveDataSellerInventoryItemsApi
+     *
+     * @return @return \Illuminate\Http\JsonResponse|void
+     */
+    public function saveDataSellerInventoryItemsApi()
+    {
+        ini_set('max_execution_time', 0);
+        try {
+            $page = 1;
+            $hasMorePages = true;
+
+            while ($hasMorePages) {
+                try {
+                    $response = $this->dataGenerator->callSellerInventoryItemsApi($page);
+
+                    if ($response != null && $response->getStatusCode() === 200) {
+                        $responseData = json_decode($response->getBody(), true);
+
+                        foreach ($responseData['data'] as $row) {
+                            Log::info('Processing ASIN: ' . $row['asin']);
+
+                            SellerInventoryItem::updateOrCreate(
+                                [
+                                    'customer_unique_id' => $row['customer_unique_id'],
+                                    'asin' => $row['asin'],  // Identificatore unico per l'aggiornamento
+                                ],
+                                [
+                                    'marketplace_id' => $row['marketplace_id'] ?? null,
+                                    'date' => $row['date'] ?? null,
+                                    'fnsku' => $row['fnsku'] ?? null,
+                                    'msku' => $row['msku'] ?? null,
+                                    'title' => $row['title'] ?? null,
+                                    'disposition' => $row['disposition'] ?? null,
+                                    'starting_warehouse_balance' => $row['starting_warehouse_balance'] ?? 0,
+                                    'in_transit_between_warehouses' => $row['in_transit_between_warehouses'] ?? 0,
+                                    'receipts' => $row['receipts'] ?? 0,
+                                    'customer_shipments' => $row['customer_shipments'] ?? 0,
+                                    'customer_returns' => $row['customer_returns'] ?? 0,
+                                    'vendor_returns' => $row['vendor_returns'] ?? 0,
+                                    'warehouse_transfer_in_out' => $row['warehouse_transfer_in_out'] ?? 0,
+                                    'found' => $row['found'] ?? 0,
+                                    'lost' => $row['lost'] ?? 0,
+                                    'damaged' => $row['damaged'] ?? 0,
+                                    'disposed' => $row['disposed'] ?? 0,
+                                    'other_events' => $row['other_events'] ?? 0,
+                                    'ending_warehouse_balance' => $row['ending_warehouse_balance'] ?? 0,
+                                    'unknown_events' => $row['unknown_events'] ?? 0,
+                                    'location' => $row['location'] ?? null,
+                                ]
+                            );
+                        }
+
+                        $hasMorePages = $page < $responseData['last_page'];
+                        $page++;
+                    } else {
+                        Log::error('Error API response: ' . $response->getBody());
+                        $hasMorePages = false;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error API call: ' . $e->getMessage());
+                    $hasMorePages = false;
+                }
+            }
+
+            return response()->json(['message' => 'Dati di Seller Inventory Items salvati con successo'], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ], 500);
+        }
     }
 
     /**
@@ -104,9 +182,6 @@ class CSVGeneratorService
         }
     }
 
-
-
-
     /**
      * downloadDataOfFlatfilevatinvoicedata
      *
@@ -190,7 +265,6 @@ class CSVGeneratorService
             ], 500);
         }
     }
-
 
     /**
      * downloadDataOfCollections
@@ -288,8 +362,6 @@ class CSVGeneratorService
             ], 500);
         }
     }
-
-
 
     /**
      * Metodo privato per gestire lo streaming dei dati in CSV

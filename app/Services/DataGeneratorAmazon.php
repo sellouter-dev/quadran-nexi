@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
+use App\Models\SellerInventoryItem;
 use Illuminate\Support\Facades\Log;
+use Psr\Http\Message\ResponseInterface;
 
 class DataGeneratorAmazon
 {
@@ -19,7 +21,7 @@ class DataGeneratorAmazon
      *
      * @param int $page.
      *
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      *
      */
     public function callVatCalculationApi($page)
@@ -27,10 +29,11 @@ class DataGeneratorAmazon
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/vat-calculation';
-            return $client->post($apiUrl, [
-                'form_params' => [
+
+            return $client->get($apiUrl, [
+                'query' => [
                     'page' => $page,
-                    'key' => 'dJQn4>501<#R'
+                    'key' => 'dJQn4>501<#R'  // Sicurezza da migliorare, vedi sotto
                 ]
             ]);
         } catch (\Exception $e) {
@@ -43,7 +46,7 @@ class DataGeneratorAmazon
      *
      * @param int $page
      *
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      *
      * */
     public function callFlatfileVatInvoiceDataApi($page)
@@ -51,10 +54,9 @@ class DataGeneratorAmazon
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/flatfile-vat-invoice-data';
-            Log::info('API URL: ' . $apiUrl);
 
-            return $client->post($apiUrl, [
-                'form_params' => [
+            return $client->get($apiUrl, [
+                'query' => [
                     'page' => $page,
                     'key' => 'dJQn4>501<#R'
                 ]
@@ -69,7 +71,7 @@ class DataGeneratorAmazon
      *
      * @param int $page
      *
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return ResponseInterface
      */
     public function callCollectionsDataApi($page)
     {
@@ -77,14 +79,38 @@ class DataGeneratorAmazon
             $client = new Client();
             $apiUrl = $this->API_URL . '/collections-data';
 
-            return $client->post($apiUrl, [
-                'form_params' => [
+            return $client->get($apiUrl, [
+                'query' => [
                     'page' => $page,
                     'key' => 'dJQn4>501<#R'
                 ]
             ]);
         } catch (\Exception $e) {
             Log::info('Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * callSellerInventoryItemsApi
+     *
+     * @param int $page
+     * @return ResponseInterface
+     */
+    public function callSellerInventoryItemsApi($page)
+    {
+        try {
+            $client = new Client();
+            $apiUrl = $this->API_URL . '/seller-inventory-items';
+
+            return $client->get($apiUrl, [
+                'query' => [
+                    'page' => $page,
+                    'key' => 'dJQn4>501<#R'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in callSellerInventoryItemsApi: ' . $e->getMessage());
+            return null;
         }
     }
 }
