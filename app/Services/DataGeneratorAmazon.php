@@ -19,21 +19,19 @@ class DataGeneratorAmazon
     /**
      * callVatCalculationApi
      *
-     * @param int $page.
      *
      * @return ResponseInterface
      *
      */
-    public function callVatCalculationApi($page)
+    public function callVatCalculationApi()
     {
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/vat-calculation';
 
             return $client->get($apiUrl, [
-                'query' => [
-                    'page' => $page,
-                    'key' => 'dJQn4>501<#R'  // Sicurezza da migliorare, vedi sotto
+                'headers' => [
+                    'Authorization' => 'Bearer dJQn4>501<#R'
                 ]
             ]);
         } catch (\Exception $e) {
@@ -44,21 +42,19 @@ class DataGeneratorAmazon
     /**
      * callFlatfileVatInvoiceDataApi
      *
-     * @param int $page
      *
      * @return ResponseInterface
      *
      * */
-    public function callFlatfileVatInvoiceDataApi($page)
+    public function callFlatfileVatInvoiceDataApi()
     {
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/flatfile-vat-invoice-data';
 
             return $client->get($apiUrl, [
-                'query' => [
-                    'page' => $page,
-                    'key' => 'dJQn4>501<#R'
+                'headers' => [
+                    'Authorization' => 'Bearer dJQn4>501<#R'
                 ]
             ]);
         } catch (\Exception $e) {
@@ -69,20 +65,18 @@ class DataGeneratorAmazon
     /**
      * callCollectionsDataApi
      *
-     * @param int $page
      *
      * @return ResponseInterface
      */
-    public function callCollectionsDataApi($page)
+    public function callCollectionsDataApi()
     {
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/collections-data';
 
             return $client->get($apiUrl, [
-                'query' => [
-                    'page' => $page,
-                    'key' => 'dJQn4>501<#R'
+                'headers' => [
+                    'Authorization' => 'Bearer dJQn4>501<#R'
                 ]
             ]);
         } catch (\Exception $e) {
@@ -93,19 +87,17 @@ class DataGeneratorAmazon
     /**
      * callSellerInventoryItemsApi
      *
-     * @param int $page
      * @return ResponseInterface
      */
-    public function callSellerInventoryItemsApi($page)
+    public function callSellerInventoryItemsApi()
     {
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/seller-inventory-items';
 
             return $client->get($apiUrl, [
-                'query' => [
-                    'page' => $page,
-                    'key' => 'dJQn4>501<#R'
+                'headers' => [
+                    'Authorization' => 'Bearer dJQn4>501<#R'
                 ]
             ]);
         } catch (\Exception $e) {
