@@ -4,8 +4,8 @@ namespace App\Services;
 
 use gnupg;
 use phpseclib3\Net\SFTP;
+use App\Services\ResponseHandler;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use phpseclib3\Crypt\PublicKeyLoader;
 
 class FileEncryptionService
@@ -16,99 +16,93 @@ class FileEncryptionService
     protected $publicKeyPath;
     protected $gnupg;
     protected $publicKeyFingerprint;
-    protected $privateKeyPathFTP;
-    protected $privateKey;
 
     /**
      * __construct
-     *
-     * @return void
      */
     public function __construct()
     {
         $this->sftpHost = env('SFTP_HOST');
         $this->sftpUsername = env('SFTP_USERNAME');
         $this->sftpPassword = env('SFTP_PASSWORD');
-        $this->publicKeyPath = storage_path('app/keys/public.asc');
-        $this->privateKeyPathFTP = storage_path('app/keys/private.key');
-        $this->privateKey = PublicKeyLoader::load(file_get_contents($this->privateKeyPathFTP));
+        $this->publicKeyPath = storage_path('app/keys/sap@nexi.it.key');
 
         putenv("GNUPGHOME=" . storage_path('app/keys'));
+
         if (!class_exists('gnupg')) {
-            Log::error('L\'estensione PHP gnupg non è installata.');
+            ResponseHandler::error('L\'estensione PHP gnupg non è installata.', [], 'error_log');
             throw new \Exception('L\'estensione PHP gnupg non è installata.');
         }
-        $this->gnupg = new gnupg();
 
+        $this->gnupg = new gnupg();
         $this->importPublicKey();
     }
 
     /**
      * importPublicKey
-     *
-     * @return void
      */
     private function importPublicKey()
     {
+        ResponseHandler::info('Importing public key', ['path' => $this->publicKeyPath], 'info_log');
+
         $publicKey = file_get_contents($this->publicKeyPath);
         $importResult = $this->gnupg->import($publicKey);
 
         if ($importResult === false) {
-            Log::error('Importazione della chiave pubblica fallita: ' . $this->gnupg->geterror());
+            ResponseHandler::error('Importazione della chiave pubblica fallita.', ['error' => $this->gnupg->geterror()], 'error_log');
         }
 
         $this->publicKeyFingerprint = $importResult['fingerprint'];
+        ResponseHandler::success('Public key imported successfully', [], 'success_log');
     }
 
     /**
      * encrypt
-     *
-     * @param  mixed $data
-     * @return void
      */
     public function encrypt($data)
     {
         try {
+            ResponseHandler::info('Starting file encryption', [], 'info_log');
             $this->gnupg->addencryptkey($this->publicKeyFingerprint);
-
             $encrypted = $this->gnupg->encrypt($data);
 
             if ($encrypted === false) {
-                throw new \Exception('La crittografia è fallita: ' . $this->gnupg->geterror());
+                throw new \Exception('Encryption failed: ' . $this->gnupg->geterror());
             }
 
+            ResponseHandler::success('File encrypted successfully', [], 'success_log');
             return $encrypted;
         } catch (\Exception $e) {
-            Log::error('Errore durante la crittografia del file.', [
+            ResponseHandler::error('Error during encryption', [
                 'message' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+                'line' => $e->getLine()
+            ], 'error_log');
+
             return false;
         }
     }
 
-    /**
-     * upload
-     *
-     * @param  mixed $encryptedData
-     * @param  mixed $remoteFilePath
-     * @return void
-     */
+
     private function upload($encryptedData, $remoteFilePath)
     {
         try {
-            Log::info('Tentativo di connessione al server SFTP.', [
+            ResponseHandler::info('Connecting to SFTP server using SSH key', [
                 'host' => $this->sftpHost,
                 'username' => $this->sftpUsername,
-            ]);
+            ], 'info_log');
 
             $sftp = new SFTP($this->sftpHost);
 
-            if (!$sftp->login($this->sftpUsername, $this->sftpPassword)) {
-                Log::error('Login al server SFTP fallito.');
+            // Percorso alla chiave privata SSH
+            $privateKeyPath = storage_path('app/keys/ftps');
+            $privateKey = file_get_contents($privateKeyPath);
+
+            // Autenticazione con chiave privata
+            $key = new PublicKeyLoader::load($privateKey);
+
+            if (!$sftp->login($this->sftpUsername, $key)) {
+                ResponseHandler::error('Login to SFTP server failed using SSH key.', [], 'error_log');
                 return false;
             }
 
@@ -116,88 +110,73 @@ class FileEncryptionService
                 $remoteFilePath .= '.enc';
             }
 
-            Log::info('Connessione al server SFTP riuscita, tentativo di caricamento del file: ' . $remoteFilePath);
+            ResponseHandler::info('Uploading file to SFTP via SSH', ['remote_path' => $remoteFilePath], 'info_log');
+
             if (!$sftp->put("/upload/" . $remoteFilePath, $encryptedData)) {
-                Log::error('Errore durante il caricamento del file criptato.');
+                ResponseHandler::error('File upload failed', ['remote_path' => $remoteFilePath], 'error_log');
                 return false;
             }
 
+            ResponseHandler::success('File uploaded successfully using SSH key', ['remote_path' => $remoteFilePath], 'success_log');
             return true;
         } catch (\Exception $e) {
-            Log::error('Errore durante il caricamento del file criptato.', [
+            ResponseHandler::error('Error during file upload via SSH', [
                 'message' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+                'line' => $e->getLine()
+            ], 'error_log');
+
             return false;
         }
-    }
-    /**
-     * generateSemaphoreFile
-     *
-     * @param  string $filePath
-     * @param  bool $withChecksum
-     * @return string
-     */
-    private function generateSemaphoreFile(string $filePath, bool $withChecksum = false): string
-    {
-        $semaphoreFilePath = $filePath . '.check'; //
-        $content = '';
-
-        if ($withChecksum) {
-            $content = hash_file('sha256', $filePath);
-        }
-
-        if (file_put_contents($semaphoreFilePath, $content) === false) {
-            throw new \Exception("Errore durante la generazione del file semaforo: {$semaphoreFilePath}");
-        }
-
-        return $semaphoreFilePath;
     }
 
     /**
      * saveFile
-     *
-     * @param  mixed $filePath
-     * @return JsonResponse
      */
     public function saveFile($filePath): JsonResponse
     {
+        ResponseHandler::info('Starting file save process', ['file_path' => $filePath], 'info_log');
+
         try {
             ini_set('max_execution_time', 300);
 
             $fileContent = file_get_contents($filePath);
+            if ($fileContent === false) {
+                ResponseHandler::error("Cannot read file", ['file_path' => $filePath], 'error_log');
+                return response()->json(['message' => 'Error reading file.'], 500);
+            }
+
             $remoteFilePath = basename($filePath);
 
-            if ($fileContent === false) {
-                Log::error("Impossibile leggere il file: " . $filePath);
-                return response()->json(['message' => 'Errore durante la lettura del file.'], 500);
-            }
-
-
             if (env("CRYPT_DATA")) {
+                ResponseHandler::info('Encrypting file before upload', ['file_path' => $filePath], 'info_log');
                 $encryptedData = $this->encrypt($fileContent);
+
                 if (!$encryptedData) {
-                    return response()->json(['message' => 'Errore durante la crittografia del file.'], 500);
+                    return response()->json(['message' => 'Error during encryption.'], 500);
                 }
-            }
-            $semaphorePath = $this->generateSemaphoreFile($filePath, true);
-
-            // Carica il file e il file semaforo sul server SFTP
-            if (!$this->upload($fileContent, $remoteFilePath) || !$this->upload(file_get_contents($semaphorePath), $semaphorePath)) {
-                throw new \Exception('Errore durante il caricamento del file o del semaforo.');
+            } else {
+                $encryptedData = $fileContent;
             }
 
-            return response()->json(['message' => 'File e semaforo caricati con successo.']);
+            if (!$this->upload($encryptedData, $remoteFilePath)) {
+                throw new \Exception('File upload failed.');
+            }
+
+            ResponseHandler::success('File saved and uploaded successfully', ['file_path' => $filePath], 'success_log');
+
+            return response()->json(['message' => 'File and semaphore uploaded successfully.']);
         } catch (\Exception $e) {
-            return response()->json([
+            ResponseHandler::error('Exception in saveFile', [
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
+            ], 'error_log');
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
             ], 500);
         }
     }

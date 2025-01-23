@@ -13,7 +13,13 @@ RUN apt-get update && apt-get install -y \
     libaio-dev \
     freetds-dev && \
     docker-php-ext-install zip pdo_mysql
+# Installa dipendenze necessarie per gnupg
+RUN apt-get update && apt-get install -y \
+    gnupg2 \
+    libgpgme-dev
 
+# Installa l'estensione PHP GnuPG
+RUN pecl install gnupg && docker-php-ext-enable gnupg
 # Configura Oracle Instant Client
 ENV LD_LIBRARY_PATH="/opt/oracle/instantclient_19_25/"
 ENV ORACLE_HOME="/opt/oracle/instantclient_19_25/"

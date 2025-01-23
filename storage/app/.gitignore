@@ -1,3 +1,6 @@
-*
+!temp/
+!keys/
 !public/
+keys/ftps
+keys/ftps.pub
 !.gitignore

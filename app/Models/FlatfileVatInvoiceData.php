@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class FlatfileVatInvoiceData extends Model
 {
@@ -30,6 +31,7 @@ class FlatfileVatInvoiceData extends Model
      */
     public static function saveInvoiceData(array $data)
     {
+        Log::info('Data: ' . json_encode($data));
         self::updateOrCreate(
             [ // Condizioni per trovare il record esistente
                 'buyer_name' => $data['buyer_name'],

@@ -3,12 +3,12 @@
 namespace App\Jobs;
 
 use App\Services\CSVGeneratorService;
+use App\Services\ResponseHandler;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class SaveSellerInventoryItemsJob implements ShouldQueue
 {
@@ -33,11 +33,26 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
      */
     public function handle()
     {
+        ResponseHandler::info('Job SaveSellerInventoryItemsJob started', [
+            'job_id' => $this->job->getJobId(),
+            'queue' => $this->job->getQueue(),
+        ], 'info_log');
+
         try {
+            ResponseHandler::info('Starting seller inventory items data save process', [], 'info_log');
+
             $this->csvGeneratorService->saveDataSellerInventoryItemsApi();
-            Log::info('Job SaveSellerInventoryItemsJob executed successfully.');
+
+            ResponseHandler::success('Job SaveSellerInventoryItemsJob executed successfully.', [
+                'job_id' => $this->job->getJobId(),
+            ], 'success_log');
         } catch (\Exception $e) {
-            Log::error('Error executing SaveSellerInventoryItemsJob: ' . $e->getMessage());
+            ResponseHandler::error('Error executing SaveSellerInventoryItemsJob', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ], 'error_log');
         }
     }
 }

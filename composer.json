@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "brick/math": "*",
         "commerceguys/addressing": "^2.2",
         "composer/semver": "^3.4",
         "darkaonline/l5-swagger": "^8.6",
@@ -17,7 +18,7 @@
         "laravel/tinker": "^2.9",
         "laravel/vapor-core": "^2.37",
         "phpseclib/phpseclib": "^3.0",
-        "yajra/laravel-oci8": "^11.0",
+        "yajra/laravel-oci8": "^11.6",
         "zircote/swagger-php": "^4.9"
     },
     "require-dev": {

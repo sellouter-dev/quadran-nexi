@@ -4,9 +4,7 @@ namespace App\Services;
 
 use App\Models\InvoiceTrack;
 use App\Models\DataCollection;
-use Illuminate\Http\JsonResponse;
 use App\Models\SellerInventoryItem;
-use Illuminate\Support\Facades\Log;
 use App\Services\DataGeneratorAmazon;
 use App\Models\FlatfileVatInvoiceData;
 use App\Services\FileEncryptionService;
@@ -25,17 +23,30 @@ class CSVGeneratorService
     /**
      * saveDataSellerInventoryItemsApi
      *
-     * @return @return \Illuminate\Http\JsonResponse|void
+     * @return \Illuminate\Http\JsonResponse|void
      */
     public function saveDataSellerInventoryItemsApi()
     {
         ini_set('max_execution_time', 0);
+        ResponseHandler::info('Starting saveDataSellerInventoryItemsApi process', [], 'info_log');
+
         try {
+            ResponseHandler::info('Calling Seller Inventory Items API', [], 'info_log');
             $response = $this->dataGenerator->callSellerInventoryItemsApi();
+
             if ($response != null && $response->getStatusCode() === 200) {
+                ResponseHandler::info('API response received successfully', ['status_code' => $response->getStatusCode()], 'info_log');
+
                 $responseData = json_decode($response->getBody(), true);
-                foreach ($responseData['data'] as $row) {
-                    Log::info('Processing ASIN: ' . $row['asin']);
+                $totalItems = count($responseData['data']);
+                ResponseHandler::info('Processing inventory items', ['total_items' => $totalItems], 'info_log');
+
+                foreach ($responseData['data'] as $index => $row) {
+                    // ResponseHandler::info('Processing ASIN', [
+                    //     'index' => $index + 1,
+                    //     'asin' => $row['asin'],
+                    //     'customer_unique_id' => $row['customer_unique_id'],
+                    // ], 'info_log');
 
                     SellerInventoryItem::updateOrCreate(
                         [
@@ -67,18 +78,36 @@ class CSVGeneratorService
                         ]
                     );
                 }
+
+                ResponseHandler::success('Seller inventory items saved successfully', [
+                    'total_processed' => $totalItems
+                ], 'success_log');
+                return response()->json(['message' => 'Dati di Seller Inventory Items salvati con successo'], 200);
             } else {
-                Log::error('Error API response: ' . $response->getBody());
+                ResponseHandler::error('Error in API response', [
+                    "response" => $response
+                ], 'error_log');
+
+                return response()->json([
+                    'error' => 'Errore API',
+                ], 500);
             }
 
-            return response()->json(['message' => 'Dati di Seller Inventory Items salvati con successo'], 200);
-        } catch (\Exception $e) {
+            ResponseHandler::error('Error in API response null', [], 'error_log');
+
             return response()->json([
+                'error' => 'Errore API',
+            ], 500);
+        } catch (\Exception $e) {
+            ResponseHandler::error('Exception in saveDataSellerInventoryItemsApi', [
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
+            ], 'error_log');
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
             ], 500);
         }
     }
@@ -91,20 +120,33 @@ class CSVGeneratorService
     public function downloadDataCalculationComputed()
     {
         ini_set('max_execution_time', 0);
+        ResponseHandler::info('Starting downloadDataCalculationComputed process', [], 'info_log');
+
         $arrayData = [];
         try {
+            ResponseHandler::info('Calling VAT Calculation API', [], 'info_log');
             $response = $this->dataGenerator->callVatCalculationApi();
-            if ($response->getStatusCode() === 200) {
-                $responseData = json_decode($response->getBody(), true);
 
-                foreach ($responseData['data'] as $row) {
-                    Log::info('Data: ' . $row['document_date']);
+            if ($response != null && $response->getStatusCode() === 200) {
+                ResponseHandler::info('API response received successfully', ['status_code' => $response->getStatusCode()], 'info_log');
+
+                $responseData = json_decode($response->getBody(), true);
+                $totalRecords = count($responseData['data']);
+                ResponseHandler::info('Processing records', ['total_records' => $totalRecords], 'info_log');
+
+                foreach ($responseData['data'] as $index => $row) {
+                    // ResponseHandler::info('Processing record', [
+                    //     'index' => $index + 1,
+                    //     'document_number' => $row['document_number'],
+                    //     'document_date' => $row['document_date'],
+                    // ], 'info_log');
+
                     $data = [
                         'document_date' => $row['document_date'],
                         'registration_date' => $row['registration_date'],
                         'document_number' => $row['document_number'],
                         'document_type' => $row['document_type'],
-                        'currency' => $row['currency'], // Divisa
+                        'currency' => $row['currency'],
                         'gross_amount' => $row['gross_amount'],
                         'net_amount' => $row['net_amount'],
                         'vat_amount' => $row['vat_amount'],
@@ -133,21 +175,41 @@ class CSVGeneratorService
 
                     InvoiceTrack::saveInvoiceTrackData($data);
                 }
+                ResponseHandler::success('Data downloaded and saved successfully', ['total_saved' => $totalRecords], 'success_log');
+
+                $filePath = storage_path('app/temp/InvoiceTrack.csv');
+                ResponseHandler::info('Generating CSV file', ['file_path' => $filePath], 'info_log');
+
+                $result = $this->streamCSV($arrayData, $filePath);
+
+                ResponseHandler::success('InvoiceTrack.csv created successfully', ['file_path' => $filePath], 'success_log');
+                return $result;
             } else {
-                Log::error('Error API: ' . $response->getBody());
+                ResponseHandler::error('Error in API response', [
+                    "response" => $response
+                ], 'error_log');
+
+                return response()->json([
+                    'error' => 'Errore API',
+                ], 500);
             }
 
-            $filePath = storage_path('app/temp/InvoiceTrack.csv');
-            $result = $this->streamCSV($arrayData, $filePath);
-            Log::info('InvoiceTrack.csv created');
-            return $result;
-        } catch (\Exception $e) {
+            ResponseHandler::error('Error in API response null', [], 'error_log');
+
             return response()->json([
+                'error' => 'Errore API',
+            ], 500);
+        } catch (\Exception $e) {
+            ResponseHandler::error('Exception in downloadDataCalculationComputed', [
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
+            ], 'error_log');
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
             ], 500);
         }
     }
@@ -166,14 +228,27 @@ class CSVGeneratorService
      */
     public function downloadDataOfFlatfilevatinvoicedata()
     {
+        ResponseHandler::info('Starting downloadDataOfFlatfilevatinvoicedata process', [], 'info_log');
+
         try {
             $arrayData = [];
+            ResponseHandler::info('Calling Flatfile VAT Invoice Data API', [], 'info_log');
+
             $response = $this->dataGenerator->callFlatfileVatInvoiceDataApi();
 
-            if ($response->getStatusCode() === 200) {
-                $responseData = json_decode($response->getBody(), true);
+            if ($response != null && $response->getStatusCode() === 200) {
+                ResponseHandler::info('API response received successfully', ['status_code' => $response->getStatusCode()], 'info_log');
 
-                foreach ($responseData['data'] as $row) {
+                $responseData = json_decode($response->getBody(), true);
+                $totalRecords = count($responseData['data']);
+                ResponseHandler::info('Processing records', ['total_records' => $totalRecords], 'info_log');
+
+                foreach ($responseData['data'] as $index => $row) {
+                    // ResponseHandler::info('Processing record', [
+                    //     'index' => $index + 1,
+                    //     'buyer_vat_number' => $row['buyer_vat_number'],
+                    //     'buyer_name' => $row['buyer_name']
+                    // ], 'info_log');
 
                     $data = [
                         'buyer_name' => $row['buyer_name'],
@@ -197,28 +272,51 @@ class CSVGeneratorService
                         'N. Partita IVA Cliente Finale' => $row['buyer_vat_number'],
                     ];
 
-
                     FlatfileVatInvoiceData::saveInvoiceData($data);
                 }
+
+                ResponseHandler::success('Flatfile VAT invoice data processed successfully', [
+                    'total_saved' => $totalRecords
+                ], 'success_log');
+
+                $filePath = storage_path('app/temp/Flatfilevatinvoicedata.csv');
+                ResponseHandler::info('Generating CSV file', ['file_path' => $filePath], 'info_log');
+
+                // $result = $this->streamCSV($arrayData, $filePath);
+
+                ResponseHandler::success('Flatfilevatinvoicedata.csv created successfully', ['file_path' => $filePath], 'success_log');
+
+                return response()->json(['message' => 'File and semaphore uploaded successfully.']);
             } else {
-                Log::error('Error API: ' . $response->getBody());
+                ResponseHandler::error('Error in API response', [
+                    "response" => $response
+                ], 'error_log');
+
                 return response()->json([
-                    'error' => 'Errore API: ' . $response->getBody(),
+                    'error' => 'Errore API',
                 ], 500);
             }
-            Log::info('Creation file...');
-            $filePath = storage_path('app/temp/Flatfilevatinvoicedata.csv');
-            return $this->streamCSV($arrayData, $filePath);
-        } catch (\Exception $e) {
+
+            ResponseHandler::error('Error in API response null', [], 'error_log');
+
             return response()->json([
+                'error' => 'Errore API',
+            ], 500);
+        } catch (\Exception $e) {
+            ResponseHandler::error('Exception in downloadDataOfFlatfilevatinvoicedata', [
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
+            ], 'error_log');
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
             ], 500);
         }
     }
+
 
     /**
      * downloadDataOfCollections
@@ -234,14 +332,28 @@ class CSVGeneratorService
      */
     public function downloadDataOfCollections()
     {
+        ResponseHandler::info('Starting downloadDataOfCollections process', [], 'info_log');
+
         $arrayData = [];
+
         try {
+            ResponseHandler::info('Calling Collections Data API', [], 'info_log');
             $response = $this->dataGenerator->callCollectionsDataApi();
 
             if ($response != null && $response->getStatusCode() === 200) {
-                $responseData = json_decode($response->getBody(), true);
+                ResponseHandler::info('API response received successfully', ['status_code' => $response->getStatusCode()], 'info_log');
 
-                foreach ($responseData['data'] as $row) {
+                $responseData = json_decode($response->getBody(), true);
+                $totalRecords = count($responseData['data']);
+                ResponseHandler::info('Processing records', ['total_records' => $totalRecords], 'info_log');
+
+                foreach ($responseData['data'] as $index => $row) {
+                    // ResponseHandler::info('Processing record', [
+                    //     'index' => $index + 1,
+                    //     'document_number' => $row['document_number'],
+                    //     'deposit_date' => $row['deposit_date'],
+                    // ], 'info_log');
+
                     $data = [
                         'deposit_date' => $row['deposit_date'],
                         'document_date' => $row['document_date'],
@@ -255,20 +367,6 @@ class CSVGeneratorService
                         'buyer_tax_registration_type' => $row['buyer_tax_registration_type'],
                         'buyer_vat_number' => $row['buyer_vat_number'],
                     ];
-                    Log::info(
-                        'Data: ' .
-                            "Data Di Pagamento: " . $row['deposit_date'] . "\n" .
-                            "Data Doc: " . $row['document_date'] . "\n" .
-                            "Data Reg: " . $row['registration_date'] . "\n" .
-                            "Numero Doc: " . $row['document_number'] . "\n" .
-                            "Tipo Documento: " . $row['document_type'] . "\n" .
-                            "Tipo Transazione: " . $row['transaction_type'] . "\n" .
-                            "Divisa: " . $row['currency'] . "\n" .
-                            "Importo: " . $row['amount'] . "\n" .
-                            "Codice Univoco (chiave RIF3): " . $row['unique_code_rif3'] . "\n" .
-                            "Tipo Di Registrazione (CF o VAT): " . $row['buyer_tax_registration_type'] . "\n" .
-                            "N. Partita IVA Cliente Finale: " . $row['buyer_vat_number']
-                    );
 
                     $arrayData[] = [
                         'Data Di Pagamento' => $row['deposit_date'],
@@ -283,23 +381,45 @@ class CSVGeneratorService
                         'Tipo Di Registrazione (CF o VAT)' => $row['buyer_tax_registration_type'],
                         'N. Partita IVA Cliente Finale' => $row['buyer_vat_number']
                     ];
-                    $arrayData[] = $data;
-                    // Chiama il metodo del modello per salvare i dati
+
                     DataCollection::saveCollectionData($data);
                 }
+
+                ResponseHandler::success('Collections data processed successfully', ['total_saved' => $totalRecords], 'success_log');
+                $filePath = storage_path('app/temp/FlatFileSettlement.csv');
+                ResponseHandler::info('Generating CSV file', ['file_path' => $filePath], 'info_log');
+
+                $result = $this->streamCSV($arrayData, $filePath);
+
+                ResponseHandler::success('FlatFileSettlement.csv created successfully', ['file_path' => $filePath], 'success_log');
+
+                return $result;
             } else {
-                throw new \Exception("Errore API: " . $response->getBody());
+                ResponseHandler::error('Error in API response', [
+                    "response" => $response
+                ], 'error_log');
+
+                return response()->json([
+                    'error' => 'Errore API',
+                ], 500);
             }
 
-            $filePath = storage_path('app/temp/FlatFileSettlement.csv');
-            return $this->streamCSV($arrayData, $filePath);
-        } catch (\Exception $e) {
+            ResponseHandler::error('Error in API response null', [], 'error_log');
+
             return response()->json([
+                'error' => 'Errore API',
+            ], 500);
+        } catch (\Exception $e) {
+            ResponseHandler::error('Exception in downloadDataOfCollections', [
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
+            ], 'error_log');
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
             ], 500);
         }
     }
@@ -310,47 +430,66 @@ class CSVGeneratorService
      * @param array $data
      * @param string $filePath
      *
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
     public function streamCSV($data, $filePath)
     {
-        Log::info('Stream CSV');
+        ResponseHandler::info('Starting CSV streaming process', ['file_path' => $filePath], 'info_log');
+
         try {
             $handle = fopen($filePath, 'w+');
-            Log::info('File opened');
+            ResponseHandler::info('File opened successfully', ['file_path' => $filePath], 'info_log');
+
             if (!empty($data)) {
-                Log::info('Data is not empty');
+                ResponseHandler::info('Data found, writing to CSV', ['total_records' => count($data)], 'info_log');
+
                 $columns = array_keys($data[0]);
                 fputcsv($handle, $columns);
-                foreach ($data as $row) {
+
+                foreach ($data as $index => $row) {
                     fputcsv($handle, $row);
                 }
             } else {
-                Log::info('Data is empty');
+                ResponseHandler::info('No data found to write to CSV', [], 'warning_log');
             }
-            Log::info('File created');
+
             fclose($handle);
+            ResponseHandler::success('CSV file created successfully', ['file_path' => $filePath], 'success_log');
+
             try {
+                ResponseHandler::info('Starting file encryption', ['file_path' => $filePath], 'info_log');
                 return $this->fileEncryptionService->saveFile($filePath);
             } catch (\Exception $e) {
-                return response()->json([
+                ResponseHandler::error('Error in file encryption', [
                     'error' => $e->getMessage(),
-                    'code' => $e->getCode(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString(),
+                ], 'error_log');
+
+                return response()->json([
+                    'error' => 'Error encrypting file: ' . $e->getMessage(),
+                    'code' => $e->getCode(),
                 ], 500);
             }
         } catch (\Exception $e) {
-            return response()->json([
+            ResponseHandler::error('Exception in streamCSV process', [
                 'error' => $e->getMessage(),
-                'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
+            ], 'error_log');
+
+            return response()->json([
+                'error' => $e->getMessage(),
+                'code' => $e->getCode()
             ], 500);
         } finally {
-            unlink($filePath);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+                ResponseHandler::info('Temporary file deleted', ['file_path' => $filePath], 'info_log');
+            } else {
+                ResponseHandler::warning('Temporary file not found for deletion', ['file_path' => $filePath], 'warning_log');
+            }
         }
     }
 }

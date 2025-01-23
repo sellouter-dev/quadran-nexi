@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
-use App\Models\SellerInventoryItem;
 use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\ResponseInterface;
 
@@ -13,7 +12,7 @@ class DataGeneratorAmazon
 
     public function __construct()
     {
-        $this->API_URL = "http://192.168.1.118:521/api";
+        $this->API_URL = "https://wflfwty00x.sharedwithexpose.com/api";
     }
 
     /**

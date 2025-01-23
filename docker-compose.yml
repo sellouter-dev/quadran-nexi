@@ -35,8 +35,9 @@ services:
       - "22:22"
     volumes:
       - ./sftp_data:/home/ftpuser/upload:rw
+      - ./storage/app/keys/ftps.pub:/home/ftpuser/.ssh/authorized_keys:ro
     environment:
-      SFTP_USERS: "ftpuser::1001:1001:upload"
+        SFTP_USERS: "ftpuser::1001:1001:upload"
     restart: unless-stopped
     networks:
       - quadran_nexi_net

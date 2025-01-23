@@ -17,3 +17,4 @@ nome da dare: quadran-nexi
 
 > php artisan schedule:work
 > php artisan queue:work
+> php artisan schedule:run

@@ -13,10 +13,6 @@ return new class extends Migration
     {
         Schema::create('seller_inventory_items', function (Blueprint $table) {
             $table->id();
-            $table->uuid('customer_unique_id')->index()->nullable();
-            $table->foreign('customer_unique_id')->references('unique_id')->on('customers')->onDelete('cascade');
-            $table->unsignedBigInteger('marketplace_id')->index()->nullable();
-            $table->foreign('marketplace_id')->references('id')->on('marketplaces');
             $table->date("date");
             $table->string('fnsku', 50)->nullable();
             $table->string('asin', 50)->index();

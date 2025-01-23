@@ -3,12 +3,12 @@
 namespace App\Jobs;
 
 use App\Services\CSVGeneratorService;
+use App\Services\ResponseHandler;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class DownloadCollectionsDataJob implements ShouldQueue
 {
@@ -33,11 +33,28 @@ class DownloadCollectionsDataJob implements ShouldQueue
      */
     public function handle()
     {
+        ResponseHandler::info('Job DownloadCollectionsDataJob started', [
+            'job_id' => $this->job->getJobId(),
+            'queue' => $this->job->getQueue(),
+        ]);
+
         try {
+            // Step 1: Avvio del download dei dati
+            ResponseHandler::info('Starting data download from API', [], 'info_log');
             $this->csvGeneratorService->downloadDataOfCollections();
-            Log::info('Job DownloadCollectionsDataJob executed successfully.');
+
+            // Step 2: Completamento del job con successo
+            ResponseHandler::success('Job DownloadCollectionsDataJob executed successfully.', [
+                'job_id' => $this->job->getJobId(),
+            ], 'success_log');
         } catch (\Exception $e) {
-            Log::error('Error executing DownloadCollectionsDataJob: ' . $e->getMessage());
+            // Log dell'errore con dettagli
+            ResponseHandler::error('Error executing DownloadCollectionsDataJob', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ], 'error_log');
         }
     }
 }
