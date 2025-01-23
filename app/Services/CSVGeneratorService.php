@@ -339,7 +339,6 @@ class CSVGeneratorService
         try {
             ResponseHandler::info('Calling Collections Data API', [], 'info_log');
             $response = $this->dataGenerator->callCollectionsDataApi();
-
             if ($response != null && $response->getStatusCode() === 200) {
                 ResponseHandler::info('API response received successfully', ['status_code' => $response->getStatusCode()], 'info_log');
 
@@ -348,12 +347,6 @@ class CSVGeneratorService
                 ResponseHandler::info('Processing records', ['total_records' => $totalRecords], 'info_log');
 
                 foreach ($responseData['data'] as $index => $row) {
-                    // ResponseHandler::info('Processing record', [
-                    //     'index' => $index + 1,
-                    //     'document_number' => $row['document_number'],
-                    //     'deposit_date' => $row['deposit_date'],
-                    // ], 'info_log');
-
                     $data = [
                         'deposit_date' => $row['deposit_date'],
                         'document_date' => $row['document_date'],

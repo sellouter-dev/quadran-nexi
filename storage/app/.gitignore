@@ -3,4 +3,9 @@
 !public/
 keys/ftps
 keys/ftps.pub
+keys/authorized_keys
+keys/random_seed
+keys/pubring.kbx
+keys/trustdb.gpg
+keys/pubring.kbx~
 !.gitignore

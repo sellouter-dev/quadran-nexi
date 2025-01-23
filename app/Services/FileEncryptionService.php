@@ -99,8 +99,8 @@ class FileEncryptionService
             $privateKey = file_get_contents($privateKeyPath);
 
             // Autenticazione con chiave privata
-            $key = new PublicKeyLoader::load($privateKey);
-
+            $key = PublicKeyLoader::load($privateKey);
+            ResponseHandler::info('Logging in to SFTP server using SSH key', ["key" => $key], 'info_log');
             if (!$sftp->login($this->sftpUsername, $key)) {
                 ResponseHandler::error('Login to SFTP server failed using SSH key.', [], 'error_log');
                 return false;

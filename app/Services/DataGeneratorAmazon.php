@@ -12,7 +12,7 @@ class DataGeneratorAmazon
 
     public function __construct()
     {
-        $this->API_URL = "https://wflfwty00x.sharedwithexpose.com/api";
+        $this->API_URL = env("API_URL");
     }
 
     /**
@@ -27,6 +27,7 @@ class DataGeneratorAmazon
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/vat-calculation';
+            ResponseHandler::info('Calling VAT calculation API', ['url' => $apiUrl], 'info_log');
 
             return $client->get($apiUrl, [
                 'headers' => [
@@ -50,7 +51,7 @@ class DataGeneratorAmazon
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/flatfile-vat-invoice-data';
-
+            ResponseHandler::info('Calling Flatfile VAT invoice data API', ['url' => $apiUrl], 'info_log');
             return $client->get($apiUrl, [
                 'headers' => [
                     'Authorization' => 'Bearer dJQn4>501<#R'
@@ -72,7 +73,7 @@ class DataGeneratorAmazon
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/collections-data';
-
+            ResponseHandler::info('Call Collections Data API', ['url' => $apiUrl], 'info_log');
             return $client->get($apiUrl, [
                 'headers' => [
                     'Authorization' => 'Bearer dJQn4>501<#R'
@@ -93,7 +94,7 @@ class DataGeneratorAmazon
         try {
             $client = new Client();
             $apiUrl = $this->API_URL . '/seller-inventory-items';
-
+            ResponseHandler::info('Call Seller Inventory Items API', ['url' => $apiUrl], 'info_log');
             return $client->get($apiUrl, [
                 'headers' => [
                     'Authorization' => 'Bearer dJQn4>501<#R'
