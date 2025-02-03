@@ -107,7 +107,7 @@ class FileEncryptionService
             }
 
             if (env("CRYPT_DATA")) {
-                $remoteFilePath .= '.enc';
+                $remoteFilePath .= '.gpg';
             }
 
             ResponseHandler::info('Uploading file to SFTP via SSH', ['remote_path' => $remoteFilePath], 'info_log');
@@ -138,7 +138,6 @@ class FileEncryptionService
         ResponseHandler::info('Starting file save process', ['file_path' => $filePath], 'info_log');
 
         try {
-            ini_set('max_execution_time', 300);
 
             $fileContent = file_get_contents($filePath);
             if ($fileContent === false) {

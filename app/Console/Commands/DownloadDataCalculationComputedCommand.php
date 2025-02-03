@@ -1,5 +1,5 @@
 <?php
-
+// FILE GENERATO
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;

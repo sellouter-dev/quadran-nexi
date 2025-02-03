@@ -15,8 +15,6 @@ class SellerInventoryItem extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'customer_unique_id',
-        'marketplace_id',
         'date',
         'fnsku',
         'asin',
@@ -49,7 +47,6 @@ class SellerInventoryItem extends Model
     {
         return [
             'id' => 'integer',
-            'marketplace_id' => 'integer',
             'starting_warehouse_balance' => 'integer',
             'in_transit_between_warehouses' => 'integer',
             'receipts' => 'integer',

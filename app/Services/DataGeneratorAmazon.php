@@ -3,106 +3,132 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
-use Psr\Http\Message\ResponseInterface;
 
 class DataGeneratorAmazon
 {
     private $API_URL;
+    private $client;
 
     public function __construct()
     {
         $this->API_URL = env("API_URL");
+        $this->client = new Client([
+            'timeout' => 0,
+            'connect_timeout' => 0,
+        ]);
     }
 
-    /**
-     * callVatCalculationApi
-     *
-     *
-     * @return ResponseInterface
-     *
-     */
+    public function makeApiCall(string $endpoint, int $pagina = 1)
+    {
+        ini_set('memory_limit', -1);
+        ini_set('max_execution_time', -1);
+        $apiUrl = $this->API_URL . $endpoint;
+        ResponseHandler::info("Calling API", ['url' => $apiUrl, 'page' => $pagina], 'info_log');
+
+        try {
+            $response = $this->client->get($apiUrl, [
+                'headers' => [
+                    'Authorization' => 'Bearer dJQn4>501<#R',
+                    'X-Pagina' => $pagina,
+                ],
+                'verify' => false,
+            ]);
+            $body = $response->getBody()->getContents();
+
+            return json_decode($body, true);
+        } catch (RequestException $e) {
+            $response = $e->getResponse();
+            Log::error("API RequestException: " . $e->getMessage(), [
+                'response' => $response ? (string) $response->getBody() : 'No response',
+                'status_code' => $response ? $response->getStatusCode() : 'null'
+            ]);
+            return [];
+        } catch (\Exception $e) {
+            Log::error("API General Exception: " . $e->getMessage());
+            return [];
+        }
+    }
+
     public function callVatCalculationApi()
     {
-        try {
-            $client = new Client();
-            $apiUrl = $this->API_URL . '/vat-calculation';
-            ResponseHandler::info('Calling VAT calculation API', ['url' => $apiUrl], 'info_log');
+        ini_set('memory_limit', -1);
+        $allData = [];
+        $page = 1;
 
-            return $client->get($apiUrl, [
-                'headers' => [
-                    'Authorization' => 'Bearer dJQn4>501<#R'
-                ]
+        do {
+            $response = $this->makeApiCall('/vat-calculation', $page);
+            $data = $response['data'] ?? [];
+            $hasRecord = $response['hasRecord'] ?? false;
+            $allData = array_merge($allData, $data);
+            $page++;
+            Log::info("Vat calculation data page $page", [
+                'data_count' => count($data),
+                'hasRecord' => $hasRecord,
             ]);
-        } catch (\Exception $e) {
-            Log::info('Error: ' . $e->getMessage());
-        }
+        } while ($hasRecord);
+
+        return $allData;
     }
 
-    /**
-     * callFlatfileVatInvoiceDataApi
-     *
-     *
-     * @return ResponseInterface
-     *
-     * */
     public function callFlatfileVatInvoiceDataApi()
     {
-        try {
-            $client = new Client();
-            $apiUrl = $this->API_URL . '/flatfile-vat-invoice-data';
-            ResponseHandler::info('Calling Flatfile VAT invoice data API', ['url' => $apiUrl], 'info_log');
-            return $client->get($apiUrl, [
-                'headers' => [
-                    'Authorization' => 'Bearer dJQn4>501<#R'
-                ]
+        ini_set('memory_limit', -1);
+        $allData = [];
+        $page = 1;
+
+        do {
+            $response = $this->makeApiCall('/flatfile-vat-invoice-data', $page);
+            $data = $response['data'] ?? [];
+            $hasRecord = $response['hasRecord'] ?? false;
+            $allData = array_merge($allData, $data);
+            Log::info("Flat file vat data page $page", [
+                'data_count' => count($data),
+                'hasRecord' => $hasRecord,
             ]);
-        } catch (\Exception $e) {
-            Log::info('Error: ' . $e->getMessage());
-        }
+            $page++;
+        } while ($hasRecord);
+
+        return $allData;
     }
 
-    /**
-     * callCollectionsDataApi
-     *
-     *
-     * @return ResponseInterface
-     */
     public function callCollectionsDataApi()
     {
-        try {
-            $client = new Client();
-            $apiUrl = $this->API_URL . '/collections-data';
-            ResponseHandler::info('Call Collections Data API', ['url' => $apiUrl], 'info_log');
-            return $client->get($apiUrl, [
-                'headers' => [
-                    'Authorization' => 'Bearer dJQn4>501<#R'
-                ]
+        ini_set('memory_limit', -1);
+        $allData = [];
+        $page = 1;
+
+        do {
+            $response = $this->makeApiCall('/collections-data', $page);
+            $data = $response['data'] ?? [];
+            $hasRecord = $response['hasRecord'] ?? false;
+            $allData = array_merge($allData, $data);
+            Log::info("Collections data page $page", [
+                'data_count' => count($data),
+                'hasRecord' => $hasRecord,
             ]);
-        } catch (\Exception $e) {
-            Log::info('Error: ' . $e->getMessage());
-        }
+            $page++;
+        } while ($hasRecord);
+        return $allData;
     }
 
-    /**
-     * callSellerInventoryItemsApi
-     *
-     * @return ResponseInterface
-     */
     public function callSellerInventoryItemsApi()
     {
-        try {
-            $client = new Client();
-            $apiUrl = $this->API_URL . '/seller-inventory-items';
-            ResponseHandler::info('Call Seller Inventory Items API', ['url' => $apiUrl], 'info_log');
-            return $client->get($apiUrl, [
-                'headers' => [
-                    'Authorization' => 'Bearer dJQn4>501<#R'
-                ]
+        ini_set('memory_limit', -1);
+        $allData = [];
+        $page = 1;
+        do {
+            $response = $this->makeApiCall('/seller-inventory-items', $page);
+            $data = $response['data'] ?? [];
+            $hasRecord = $response['hasRecord'] ?? false;
+            $allData = array_merge($allData, $data);
+            Log::info("Inventory data page $page", [
+                'data_count' => count($data),
+                'hasRecord' => $hasRecord,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Error in callSellerInventoryItemsApi: ' . $e->getMessage());
-            return null;
-        }
+            $page++;
+        } while ($hasRecord);
+        return $allData;
     }
 }
