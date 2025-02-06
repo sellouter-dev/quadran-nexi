@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SellerInventoryItem;
-use Illuminate\Support\Facades\Auth;
+use Firebase\JWT\JWT;
+use Firebase\JWT\JWK;
+use GuzzleHttp\Client;
 
 /**
  * @OA\Info(
@@ -24,6 +26,38 @@ use Illuminate\Support\Facades\Auth;
  */
 class SellerInventoryItemsController extends Controller
 {
+    private $requiredScope = 'Tech_SapSellouter';
+
+    private function getPublicKeys()
+    {
+        $jwksUrl = env('JWKS_URL');
+        $client = new Client();
+        $response = $client->get($jwksUrl);
+        $jwks = json_decode($response->getBody(), true);
+
+        return JWK::parseKeySet($jwks);
+    }
+
+    private function validateToken($token)
+    {
+        try {
+            $publicKeys = $this->getPublicKeys();
+            $decoded = JWT::decode($token, $publicKeys);
+
+            if ($decoded->exp < time()) {
+                return response()->json(['error' => 'ERROR 9020: JWT expired'], 401);
+            }
+
+            if (!isset($decoded->scope) || !in_array($this->requiredScope, explode(' ', $decoded->scope))) {
+                return response()->json(['error' => 'ERROR 9030: Scope check failed'], 403);
+            }
+
+            return $decoded;
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'ERROR 9010: Signature validation failed', 'message' => $e->getMessage()], 401);
+        }
+    }
+
     /**
      * @OA\Get(
      *     path="/api/seller-inventory-items",
@@ -148,8 +182,15 @@ class SellerInventoryItemsController extends Controller
      */
     public function getInventory(Request $request)
     {
-        if (!Auth::check()) {
+        $authHeader = $request->header('Authorization');
+        if (!$authHeader || !preg_match('/Bearer\s(.*)/', $authHeader, $matches)) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $token = $matches[1];
+        $validationResult = $this->validateToken($token);
+        if ($validationResult instanceof \Illuminate\Http\JsonResponse) {
+            return $validationResult;
         }
 
         $columns = [

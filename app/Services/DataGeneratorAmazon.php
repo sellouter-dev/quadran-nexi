@@ -31,7 +31,6 @@ class DataGeneratorAmazon
             $response = $this->client->get($apiUrl, [
                 'headers' => [
                     'Authorization' => 'Bearer dJQn4>501<#R',
-                    'X-Pagina' => $pagina,
                 ],
                 'verify' => false,
             ]);
