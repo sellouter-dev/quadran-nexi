@@ -57,18 +57,19 @@ return [
             'path' => storage_path('logs/error.log'),
             'level' => 'error',
         ],
+
         'info_log' => [
             'driver' => 'single',
             'path' => storage_path('logs/info.log'),
             'level' => 'info',
         ],
+
         'success_log' => [
             'driver' => 'single',
             'path' => storage_path('logs/success.log'),
             'level' => 'info',
         ],
 
-        // Aggiunta di un canale di debug personalizzato
         'debug_log' => [
             'driver' => 'single',
             'path' => storage_path('logs/debug.log'),
@@ -79,6 +80,22 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/warning.log'),
             'level' => 'warning',
+        ],
+
+        'muvi' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/muvi.log'),
+            'level' => 'debug',
+        ],
+        'inventory' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/inventory.log'),
+            'level' => 'debug',
+        ],
+        'sellouter' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/sellouter.log'),
+            'level' => 'debug',
         ],
     ],
 ];

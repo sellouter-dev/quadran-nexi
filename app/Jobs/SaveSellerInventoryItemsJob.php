@@ -2,19 +2,19 @@
 
 namespace App\Jobs;
 
-use App\Services\CSVGeneratorService;
-use App\Services\ResponseHandler;
+use GetInventoryService;
 use Illuminate\Bus\Queueable;
+use App\Services\ResponseHandler;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 
 class SaveSellerInventoryItemsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $csvGeneratorService;
+    protected $getInventoryService;
 
     /**
      * Create a new job instance.
@@ -23,7 +23,7 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
      */
     public function __construct()
     {
-        $this->csvGeneratorService = new CSVGeneratorService();
+        $this->getInventoryService = new GetInventoryService();
     }
 
     /**
@@ -41,7 +41,7 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
         try {
             ResponseHandler::info('Starting seller inventory items data save process', [], 'info_log');
 
-            $this->csvGeneratorService->saveDataSellerInventoryItemsApi();
+            $this->getInventoryService->saveDataSellerInventoryItemsApi();
 
             ResponseHandler::success('Job SaveSellerInventoryItemsJob executed successfully.', [
                 'job_id' => $this->job->getJobId(),

@@ -86,7 +86,6 @@ class DataGeneratorAmazon
                 'data_count' => count($data),
                 'hasRecord' => $hasRecord,
             ]);
-            $page++;
         } while ($hasRecord);
 
         return $allData;
