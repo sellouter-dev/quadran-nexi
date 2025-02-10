@@ -2,28 +2,43 @@
 
 namespace App\Jobs;
 
-use App\Services\CSVGeneratorService;
-use App\Services\ResponseHandler;
 use Illuminate\Bus\Queueable;
+use App\Services\ResponseHandler;
+use App\Services\CSVGeneratorService;
+use Illuminate\Queue\SerializesModels;
+use App\Services\APIDataFetcherService;
+use Illuminate\Queue\InteractsWithQueue;
+use App\Services\CsvDataGeneratorService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 
 class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $csvGeneratorService;
+    /**
+     * Il servizio CsvDataGeneratorService per la gestione dei dati.
+     *
+     * @var CsvDataGeneratorService
+     */
+    protected $csvDataGeneratorService;
 
     /**
-     * Create a new job instance.
+     * Il servizio APIDataFetcherService per il salvataggio dei dati.
+     *
+     * @var APIDataFetcherService
+     */
+    protected $apiDataFetcherService;
+
+    /**
+     * Crea una nuova istanza del comando.
      *
      * @return void
      */
     public function __construct()
     {
-        $this->csvGeneratorService = new CSVGeneratorService();
+        $this->csvDataGeneratorService = new CsvDataGeneratorService();
+        $this->apiDataFetcherService = new APIDataFetcherService();
     }
 
     /**
@@ -35,24 +50,25 @@ class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
     {
         ResponseHandler::info('Job DownloadFlatfileVatInvoiceDataJob started', [
             'job_id' => $this->job->getJobId(),
-            'queue' => $this->job->getQueue(),
-        ], 'info_log');
+            'queue'  => $this->job->getQueue(),
+        ], 'sellouter');
 
         try {
-            ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'info_log');
+            ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'sellouter');
 
-            $this->csvGeneratorService->downloadDataOfFlatfilevatinvoicedata();
+            $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
+            $this->csvDataGeneratorService->generateFlatfileVatCSV();
 
             ResponseHandler::success('Job DownloadFlatfileVatInvoiceDataJob executed successfully.', [
                 'job_id' => $this->job->getJobId(),
-            ], 'success_log');
+            ], 'sellouter');
         } catch (\Exception $e) {
             ResponseHandler::error('Error executing DownloadFlatfileVatInvoiceDataJob', [
                 'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-            ], 'error_log');
+            ], 'sellouter');
         }
     }
 }

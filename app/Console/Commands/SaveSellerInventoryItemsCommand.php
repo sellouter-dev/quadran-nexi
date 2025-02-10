@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\ResponseHandler;
 use App\Services\CSVGeneratorService;
+use App\Services\APIDataFetcherService;
 
 class SaveSellerInventoryItemsCommand extends Command
 {
@@ -16,18 +17,11 @@ class SaveSellerInventoryItemsCommand extends Command
     protected $signature = 'app:save-seller-inventory-items-command';
 
     /**
-     * La descrizione del comando Artisan.
+     * Il servizio APIDataFetcherService per il salvataggio dei dati.
      *
-     * @var string
+     * @var APIDataFetcherService
      */
-    protected $description = 'Salva i dati dell\'inventario dei venditori dal servizio API e li archivia nel database';
-
-    /**
-     * Il servizio CSVGeneratorService per la gestione dei dati.
-     *
-     * @var CSVGeneratorService
-     */
-    protected $csvGeneratorService;
+    protected $apiDataFetcherService;
 
     /**
      * Crea una nuova istanza del comando.
@@ -37,7 +31,7 @@ class SaveSellerInventoryItemsCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->csvGeneratorService = new CSVGeneratorService();
+        $this->apiDataFetcherService = new APIDataFetcherService();
     }
 
     /**
@@ -54,7 +48,7 @@ class SaveSellerInventoryItemsCommand extends Command
             $this->info('Starting seller inventory items data save process...');
             ResponseHandler::info('Starting seller inventory items data save process', [], 'info_log');
 
-            $this->csvGeneratorService->saveDataSellerInventoryItemsApi();
+            $this->apiDataFetcherService->fetchAndSaveDataSellerInventoryItemsApi();
 
             // Completamento con successo
             $this->info('Seller inventory items data saved successfully.');

@@ -4,7 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\ResponseHandler;
-use App\Services\CSVGeneratorService;
+use App\Services\APIDataFetcherService;
+use App\Services\CsvDataGeneratorService;
 
 class DownloadCollectionsDataCommand extends Command
 {
@@ -16,11 +17,19 @@ class DownloadCollectionsDataCommand extends Command
     protected $signature = 'app:download-collections-data-command';
 
     /**
-     * Il servizio CSVGeneratorService per la gestione dei dati.
+     * Il servizio CsvDataGeneratorService per la gestione dei dati.
      *
-     * @var CSVGeneratorService
+     * @var CsvDataGeneratorService
      */
-    protected $csvGeneratorService;
+    protected $csvDataGeneratorService;
+
+    /**
+     * Il servizio APIDataFetcherService per il salvataggio dei dati.
+     *
+     * @var APIDataFetcherService
+     */
+    protected $apiDataFetcherService;
+
 
     /**
      * Crea una nuova istanza del comando.
@@ -30,7 +39,8 @@ class DownloadCollectionsDataCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->csvGeneratorService = new CSVGeneratorService();
+        $this->csvDataGeneratorService = new CsvDataGeneratorService();
+        $this->apiDataFetcherService = new APIDataFetcherService();
     }
 
     /**
@@ -47,7 +57,8 @@ class DownloadCollectionsDataCommand extends Command
             $this->info('Starting data download from API...');
             ResponseHandler::info('Starting data download from API', [], 'info_log');
 
-            $this->csvGeneratorService->downloadDataOfCollections();
+            $this->apiDataFetcherService->fetchAndStoreCollectionData();
+            $this->csvDataGeneratorService->generateCollectionCSV();
 
             // Completamento con successo
             $this->info('Data download completed successfully.');

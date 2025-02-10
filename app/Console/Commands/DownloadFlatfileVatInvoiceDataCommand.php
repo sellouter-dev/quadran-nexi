@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\ResponseHandler;
 use App\Services\CSVGeneratorService;
+use App\Services\APIDataFetcherService;
+use App\Services\CsvDataGeneratorService;
 
 class DownloadFlatfileVatInvoiceDataCommand extends Command
 {
@@ -23,11 +25,18 @@ class DownloadFlatfileVatInvoiceDataCommand extends Command
     protected $description = 'Scarica i dati delle fatture VAT flatfile e li salva in un file CSV';
 
     /**
-     * Il servizio CSVGeneratorService per la gestione dei dati.
+     * Il servizio CsvDataGeneratorService per la gestione dei dati.
      *
-     * @var CSVGeneratorService
+     * @var CsvDataGeneratorService
      */
-    protected $csvGeneratorService;
+    protected $csvDataGeneratorService;
+
+    /**
+     * Il servizio APIDataFetcherService per il salvataggio dei dati.
+     *
+     * @var APIDataFetcherService
+     */
+    protected $apiDataFetcherService;
 
     /**
      * Crea una nuova istanza del comando.
@@ -37,7 +46,8 @@ class DownloadFlatfileVatInvoiceDataCommand extends Command
     public function __construct()
     {
         parent::__construct();
-        $this->csvGeneratorService = new CSVGeneratorService();
+        $this->csvDataGeneratorService = new CsvDataGeneratorService();
+        $this->apiDataFetcherService = new APIDataFetcherService();
     }
 
     /**
@@ -54,7 +64,8 @@ class DownloadFlatfileVatInvoiceDataCommand extends Command
             $this->info('Starting flatfile VAT invoice data download...');
             ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'info_log');
 
-            $this->csvGeneratorService->downloadDataOfFlatfilevatinvoicedata();
+            $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
+            $this->csvDataGeneratorService->generateFlatfileVatCSV();
 
             // Completamento con successo
             $this->info('Flatfile VAT invoice data download completed successfully.');

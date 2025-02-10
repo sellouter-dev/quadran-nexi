@@ -2,10 +2,10 @@
 
 namespace App\Jobs;
 
-use GetInventoryService;
 use Illuminate\Bus\Queueable;
 use App\Services\ResponseHandler;
 use Illuminate\Queue\SerializesModels;
+use App\Services\APIDataFetcherService;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,16 +14,21 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $getInventoryService;
+    /**
+     * Il servizio APIDataFetcherService per il salvataggio dei dati.
+     *
+     * @var APIDataFetcherService
+     */
+    protected $apiDataFetcherService;
 
     /**
-     * Create a new job instance.
+     * Crea una nuova istanza del job.
      *
      * @return void
      */
     public function __construct()
     {
-        $this->getInventoryService = new GetInventoryService();
+        $this->apiDataFetcherService = new APIDataFetcherService();
     }
 
     /**
@@ -35,24 +40,24 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
     {
         ResponseHandler::info('Job SaveSellerInventoryItemsJob started', [
             'job_id' => $this->job->getJobId(),
-            'queue' => $this->job->getQueue(),
-        ], 'info_log');
+            'queue'  => $this->job->getQueue(),
+        ], 'inventory');
 
         try {
-            ResponseHandler::info('Starting seller inventory items data save process', [], 'info_log');
+            ResponseHandler::info('Starting seller inventory items data save process', [], 'inventory');
 
-            $this->getInventoryService->saveDataSellerInventoryItemsApi();
+            $this->apiDataFetcherService->fetchAndSaveDataSellerInventoryItemsApi();
 
             ResponseHandler::success('Job SaveSellerInventoryItemsJob executed successfully.', [
                 'job_id' => $this->job->getJobId(),
-            ], 'success_log');
+            ], 'inventory');
         } catch (\Exception $e) {
             ResponseHandler::error('Error executing SaveSellerInventoryItemsJob', [
                 'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-            ], 'error_log');
+            ], 'inventory');
         }
     }
 }
