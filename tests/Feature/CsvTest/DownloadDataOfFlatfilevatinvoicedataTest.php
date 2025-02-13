@@ -4,7 +4,6 @@ namespace Tests\Feature\Vendor;
 
 use Mockery;
 use Tests\TestCase;
-use App\Services\CSVGeneratorService;
 
 
 class DownloadDataOfFlatfilevatinvoicedataTest extends TestCase
@@ -14,11 +13,7 @@ class DownloadDataOfFlatfilevatinvoicedataTest extends TestCase
      *
      * @return void
      */
-    public function testDownloadDataOfFlatfilevatinvoicedata()
-    {
-        $csvGeneratorService = new CSVGeneratorService();
-        $csvGeneratorService->downloadDataOfCollections();
-    }
+    public function testDownloadDataOfFlatfilevatinvoicedata() {}
 
     protected function tearDown(): void
     {

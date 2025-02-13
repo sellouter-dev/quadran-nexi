@@ -8,6 +8,7 @@ use App\Models\FlatfileVatInvoiceData;
 use App\Services\FileEncryptionService;
 use App\Services\ResponseHandler;
 use Exception;
+use Carbon\Carbon; // Importiamo Carbon per gestire le date
 
 /**
  * Class CsvDataGeneratorService
@@ -47,8 +48,10 @@ class CsvDataGeneratorService
         ResponseHandler::info('Starting generation of Invoice CSV', [], 'sellouter');
 
         try {
-            $data = InvoiceTrack::all()->toArray();
-            $result = $this->streamCSV($data, storage_path('app/temp/InvoiceTrack.csv'));
+            // Filtra i record di oggi
+            $data = InvoiceTrack::whereDate('created_at', Carbon::today())->get()->toArray();
+            $filePath = storage_path('app/temp/InvoiceTrack_' . Carbon::today()->format('dmY') . '.csv');
+            $result = $this->streamCSV($data, $filePath);
             ResponseHandler::success('Invoice CSV generated successfully', ['file' => 'InvoiceTrack.csv'], 'sellouter');
             return $result;
         } catch (Exception $e) {
@@ -69,8 +72,11 @@ class CsvDataGeneratorService
         ResponseHandler::info('Starting generation of Flatfile VAT CSV', [], 'sellouter');
 
         try {
-            $data = FlatfileVatInvoiceData::all()->toArray();
-            $result = $this->streamCSV($data, storage_path('app/temp/Flatfilevatinvoicedata.csv'));
+            // Filtra i record di oggi
+            $data = FlatfileVatInvoiceData::whereDate('created_at', Carbon::today())->get()->toArray();
+            $filePath = storage_path('app/temp/Flatfilevatinvoicedata_' . Carbon::today()->format('dmY') . '.csv');
+            $result = $this->streamCSV($data, $filePath);
+
             ResponseHandler::success('Flatfile VAT CSV generated successfully', ['file' => 'Flatfilevatinvoicedata.csv'], 'sellouter');
             return $result;
         } catch (Exception $e) {
@@ -91,8 +97,11 @@ class CsvDataGeneratorService
         ResponseHandler::info('Starting generation of Collection CSV', [], 'sellouter');
 
         try {
-            $data = DataCollection::all()->toArray();
-            $result = $this->streamCSV($data, storage_path('app/temp/FlatFileSettlement.csv'));
+            // Filtra i record di oggi
+            $data = DataCollection::whereDate('created_at', Carbon::today())->get()->toArray();
+            $filePath = storage_path('app/temp/FlatFileSettlement_' . Carbon::today()->format('dmY') . '.csv');
+            $result = $this->streamCSV($data, $filePath);
+
             ResponseHandler::success('Collection CSV generated successfully', ['file' => 'FlatFileSettlement.csv'], 'sellouter');
             return $result;
         } catch (Exception $e) {

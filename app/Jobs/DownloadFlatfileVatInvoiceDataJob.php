@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
 use App\Services\ResponseHandler;
-use App\Services\CSVGeneratorService;
 use Illuminate\Queue\SerializesModels;
 use App\Services\APIDataFetcherService;
 use Illuminate\Queue\InteractsWithQueue;

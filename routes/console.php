@@ -36,4 +36,4 @@ Schedule::call(function () {
             }
         }
     }
-})->everyThreeMonths();
+})->dailyAt("10:06");

@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\ResponseHandler;
-use App\Services\CSVGeneratorService;
 use App\Services\APIDataFetcherService;
 
 class SaveSellerInventoryItemsCommand extends Command
