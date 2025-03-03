@@ -15,7 +15,7 @@ use Carbon\Carbon; // Importiamo Carbon per gestire le date
  *
  * Questa classe si occupa di generare file CSV a partire dai dati presenti nei modelli InvoiceTrack,
  * FlatfileVatInvoiceData e DataCollection, successivamente esegue la crittografia del file generato.
- * Durante il processo, vengono utilizzati log consistenti sul channel "sellouter" per tracciare le operazioni.
+ * Durante il processo, vengono utilizzati log consistenti sul channel "csv" per tracciare le operazioni.
  *
  * @package App\Services
  */
@@ -45,18 +45,18 @@ class CsvDataGeneratorService
      */
     public function generateInvoiceCSV()
     {
-        ResponseHandler::info('Starting generation of Invoice CSV', [], 'sellouter');
+        ResponseHandler::info('Avvio della generazione del CSV per InvoiceTrack', [], 'csv-info');
 
         try {
             // Filtra i record di oggi
             $data = InvoiceTrack::whereDate('created_at', Carbon::today())->get()->toArray();
             $filePath = storage_path('app/temp/InvoiceTrack_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
-            ResponseHandler::success('Invoice CSV generated successfully', ['file' => 'InvoiceTrack.csv'], 'sellouter');
+            ResponseHandler::success('CSV per InvoiceTrack generato con successo', ['file' => 'InvoiceTrack.csv'], 'csv-success');
             return $result;
         } catch (Exception $e) {
-            ResponseHandler::error('Error generating Invoice CSV', ['error' => $e->getMessage()], 'sellouter');
-            return response()->json(['error' => $e->getMessage(), 'code' => $e->getCode()], 500);
+            ResponseHandler::error('Errore durante la generazione del CSV per InvoiceTrack', ['errore' => $e->getMessage()], 'csv-error');
+            return response()->json(['errore' => $e->getMessage(), 'codice' => $e->getCode()], 500);
         }
     }
 
@@ -69,7 +69,7 @@ class CsvDataGeneratorService
      */
     public function generateFlatfileVatCSV()
     {
-        ResponseHandler::info('Starting generation of Flatfile VAT CSV', [], 'sellouter');
+        ResponseHandler::info('Avvio della generazione del CSV per FlatfileVatInvoiceData', [], 'csv-info');
 
         try {
             // Filtra i record di oggi
@@ -77,11 +77,11 @@ class CsvDataGeneratorService
             $filePath = storage_path('app/temp/Flatfilevatinvoicedata_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
 
-            ResponseHandler::success('Flatfile VAT CSV generated successfully', ['file' => 'Flatfilevatinvoicedata.csv'], 'sellouter');
+            ResponseHandler::success('CSV per FlatfileVatInvoiceData generato con successo', ['file' => 'Flatfilevatinvoicedata.csv'], 'csv-success');
             return $result;
         } catch (Exception $e) {
-            ResponseHandler::error('Error generating Flatfile VAT CSV', ['error' => $e->getMessage()], 'sellouter');
-            return response()->json(['error' => $e->getMessage(), 'code' => $e->getCode()], 500);
+            ResponseHandler::error('Errore durante la generazione del CSV per FlatfileVatInvoiceData', ['errore' => $e->getMessage()], 'csv-error');
+            return response()->json(['errore' => $e->getMessage(), 'codice' => $e->getCode()], 500);
         }
     }
 
@@ -94,7 +94,7 @@ class CsvDataGeneratorService
      */
     public function generateCollectionCSV()
     {
-        ResponseHandler::info('Starting generation of Collection CSV', [], 'sellouter');
+        ResponseHandler::info('Avvio della generazione del CSV per DataCollection', [], 'csv-info');
 
         try {
             // Filtra i record di oggi
@@ -102,11 +102,11 @@ class CsvDataGeneratorService
             $filePath = storage_path('app/temp/FlatFileSettlement_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
 
-            ResponseHandler::success('Collection CSV generated successfully', ['file' => 'FlatFileSettlement.csv'], 'sellouter');
+            ResponseHandler::success('CSV per DataCollection generato con successo', ['file' => 'FlatFileSettlement.csv'], 'csv-success');
             return $result;
         } catch (Exception $e) {
-            ResponseHandler::error('Error generating Collection CSV', ['error' => $e->getMessage()], 'sellouter');
-            return response()->json(['error' => $e->getMessage(), 'code' => $e->getCode()], 500);
+            ResponseHandler::error('Errore durante la generazione del CSV per DataCollection', ['errore' => $e->getMessage()], 'csv-error');
+            return response()->json(['errore' => $e->getMessage(), 'codice' => $e->getCode()], 500);
         }
     }
 
@@ -124,21 +124,21 @@ class CsvDataGeneratorService
     private function streamCSV($data, $filePath)
     {
         try {
-            ResponseHandler::info("Starting CSV stream to file: $filePath", [], 'muvi');
+            ResponseHandler::info("Avvio del salvataggio del CSV sul file: $filePath", [], 'csv-info');
 
             $handle = fopen($filePath, 'w+');
             if (!$handle) {
-                throw new Exception("Unable to open file: $filePath for writing");
+                throw new Exception("Impossibile aprire il file: $filePath per la scrittura");
             }
 
             if (!empty($data)) {
                 if (fputcsv($handle, array_keys($data[0])) === false) {
-                    throw new Exception("Error writing CSV header to file: $filePath");
+                    throw new Exception("Errore nella scrittura dell'header CSV sul file: $filePath");
                 }
-                ResponseHandler::info("Writing CSV rows to file: $filePath", [], 'muvi');
+                ResponseHandler::info("Scrittura delle righe CSV sul file: $filePath", [], 'csv-info');
                 foreach ($data as $row) {
                     if (fputcsv($handle, $row) === false) {
-                        throw new Exception("Error writing CSV row to file: $filePath");
+                        throw new Exception("Errore nella scrittura di una riga CSV sul file: $filePath");
                     }
                 }
             }
@@ -146,11 +146,11 @@ class CsvDataGeneratorService
             fclose($handle);
 
             $encryptedFile = $this->fileEncryptionService->saveFile($filePath);
-            ResponseHandler::success("CSV file saved and encrypted successfully", ['filePath' => $filePath], 'muvi');
+            ResponseHandler::success("File CSV salvato e crittografato con successo", ['filePath' => $filePath], 'csv-success');
             return $encryptedFile;
         } catch (Exception $e) {
-            ResponseHandler::error("Error in streaming CSV to file: $filePath", ['error' => $e->getMessage()], 'muvi');
-            return response()->json(['error' => $e->getMessage(), 'code' => $e->getCode()], 500);
+            ResponseHandler::error("Errore durante il salvataggio del CSV sul file: $filePath", ['errore' => $e->getMessage()], 'csv-error');
+            return response()->json(['errore' => $e->getMessage(), 'codice' => $e->getCode()], 500);
         } finally {
             // Rimuove il file temporaneo se esiste
             if (file_exists($filePath)) {

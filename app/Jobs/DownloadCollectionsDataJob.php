@@ -47,29 +47,41 @@ class DownloadCollectionsDataJob implements ShouldQueue
      */
     public function handle()
     {
-        ResponseHandler::info('Job DownloadCollectionsDataJob started', [
-            'job_id' => $this->job->getJobId(),
-            'queue'  => $this->job->getQueue(),
-        ], 'sellouter');
+        ResponseHandler::info(
+            'Job DownloadCollectionsDataJob avviato',
+            [
+                'job_id' => $this->job->getJobId(),
+                'queue'  => $this->job->getQueue(),
+            ],
+            'sellouter-info'
+        );
 
         try {
-            // Step 1: Avvio del download dei dati
-            ResponseHandler::info('Starting data download from API', [], 'sellouter');
+            // Step 1: Avvio del download dei dati dall'API
+            ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter-info');
             $this->apiDataFetcherService->fetchAndStoreCollectionData();
             $this->csvDataGeneratorService->generateCollectionCSV();
 
             // Step 2: Completamento del job con successo
-            ResponseHandler::success('Job DownloadCollectionsDataJob executed successfully.', [
-                'job_id' => $this->job->getJobId(),
-            ], 'sellouter');
+            ResponseHandler::success(
+                'Job DownloadCollectionsDataJob eseguito con successo.',
+                [
+                    'job_id' => $this->job->getJobId(),
+                ],
+                'sellouter-success'
+            );
         } catch (\Exception $e) {
             // Log dell'errore con dettagli
-            ResponseHandler::error('Error executing DownloadCollectionsDataJob', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ], 'sellouter');
+            ResponseHandler::error(
+                'Errore durante l\'esecuzione del job DownloadCollectionsDataJob',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'   => $e->getFile(),
+                    'linea'  => $e->getLine(),
+                    'trace'  => $e->getTraceAsString(),
+                ],
+                'sellouter-error'
+            );
         }
     }
 }

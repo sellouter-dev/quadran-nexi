@@ -9,15 +9,6 @@ use App\Services\DataGeneratorAmazon;
 use App\Models\FlatfileVatInvoiceData;
 use Exception;
 
-/**
- * Class APIDataFetcherService
- *
- * Questo servizio si occupa di richiamare diverse API (ad esempio per Seller Inventory Items,
- * calcolo dell'IVA, flatfile VAT invoice data, e collection data) e di salvare i dati ottenuti.
- * Durante l'intero processo viene utilizzato il channel di log "sellouter" per avere un log consistente.
- *
- * @package App\Services
- */
 class APIDataFetcherService
 {
     /**
@@ -45,19 +36,19 @@ class APIDataFetcherService
     public function fetchAndSaveDataSellerInventoryItemsApi()
     {
         // Log di inizio processo
-        ResponseHandler::info('Starting saveDataSellerInventoryItemsApi process', [], 'sellouter');
+        ResponseHandler::info('Avvio del processo di salvataggio per Seller Inventory Items API', [], 'sellouter-info');
 
         try {
-            ResponseHandler::info('Calling Seller Inventory Items API', [], 'sellouter');
+            ResponseHandler::info('Chiamata all\'API di Seller Inventory Items', [], 'sellouter-info');
             $response = $this->dataGenerator->callSellerInventoryItemsApi();
 
             $totalItems = count($response);
-            ResponseHandler::info('Processing inventory items', ['total_items' => $totalItems], 'sellouter');
+            ResponseHandler::info('Elaborazione degli inventory items', ['totale_item' => $totalItems], 'sellouter-info');
 
             foreach ($response as $index => $row) {
                 SellerInventoryItem::create([
                     'asin'                          => $row['asin'],
-                    'date'                          => isset($row['date']) ? date('Y-m-d', strtotime($row['date'])) : null,
+                    'report_date'                   => isset($row['date']) ? date('Y-m-d', strtotime($row['date'])) : null,
                     'fnsku'                         => $row['fnsku'] ?? null,
                     'msku'                          => $row['msku'] ?? null,
                     'title'                         => $row['title'] ?? null,
@@ -80,21 +71,21 @@ class APIDataFetcherService
                 ]);
             }
 
-            ResponseHandler::success('Seller inventory items saved successfully', [
-                'total_processed' => $totalItems
-            ], 'sellouter');
+            ResponseHandler::success('Seller inventory items salvati con successo', [
+                'totale_processati' => $totalItems
+            ], 'sellouter-success');
 
-            return response()->json(['message' => 'Dati di Seller Inventory Items salvati con successo'], 200);
+            return response()->json(['messaggio' => 'Dati di Seller Inventory Items salvati con successo'], 200);
         } catch (Exception $e) {
-            ResponseHandler::error('Exception in saveDataSellerInventoryItemsApi', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-            ], 'sellouter');
+            ResponseHandler::error('Eccezione in fetchAndSaveDataSellerInventoryItemsApi', [
+                'errore' => $e->getMessage(),
+                'file'   => $e->getFile(),
+                'linea'  => $e->getLine(),
+            ], 'sellouter-error');
 
             return response()->json([
-                'error' => $e->getMessage(),
-                'code'  => $e->getCode()
+                'errore' => $e->getMessage(),
+                'codice' => $e->getCode()
             ], 500);
         }
     }
@@ -108,7 +99,7 @@ class APIDataFetcherService
      */
     public function fetchAndStoreInvoiceData()
     {
-        ResponseHandler::info('Fetching VAT Calculation Data', [], 'sellouter');
+        ResponseHandler::info('Recupero dati per il calcolo dell\'IVA', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callVatCalculationApi();
@@ -118,9 +109,9 @@ class APIDataFetcherService
                 InvoiceTrack::saveInvoiceTrackData($row);
             }
 
-            ResponseHandler::success('Invoice data fetched and saved successfully', ['total_saved' => $totalRecords], 'sellouter');
+            ResponseHandler::success('Dati delle fatture recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
         } catch (Exception $e) {
-            ResponseHandler::error('Error in fetching invoice data', ['error' => $e->getMessage()], 'sellouter');
+            ResponseHandler::error('Errore nel recupero dei dati delle fatture', ['errore' => $e->getMessage()], 'sellouter-error');
         }
     }
 
@@ -133,7 +124,7 @@ class APIDataFetcherService
      */
     public function fetchAndStoreFlatfileVatData()
     {
-        ResponseHandler::info('Fetching Flatfile VAT Invoice Data', [], 'sellouter');
+        ResponseHandler::info('Recupero dati Flatfile VAT Invoice', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callFlatfileVatInvoiceDataApi();
@@ -143,9 +134,9 @@ class APIDataFetcherService
                 FlatfileVatInvoiceData::saveInvoiceData($row);
             }
 
-            ResponseHandler::success('Flatfile VAT invoice data fetched and saved successfully', ['total_saved' => $totalRecords], 'sellouter');
+            ResponseHandler::success('Dati Flatfile VAT Invoice recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
         } catch (Exception $e) {
-            ResponseHandler::error('Error in fetching flatfile VAT data', ['error' => $e->getMessage()], 'sellouter');
+            ResponseHandler::error('Errore nel recupero dei dati Flatfile VAT', ['errore' => $e->getMessage()], 'sellouter-error');
         }
     }
 
@@ -158,7 +149,7 @@ class APIDataFetcherService
      */
     public function fetchAndStoreCollectionData()
     {
-        ResponseHandler::info('Fetching Collections Data', [], 'sellouter');
+        ResponseHandler::info('Recupero dati delle collections', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callCollectionsDataApi();
@@ -168,9 +159,9 @@ class APIDataFetcherService
                 DataCollection::saveCollectionData($row);
             }
 
-            ResponseHandler::success('Collection data fetched and saved successfully', ['total_saved' => $totalRecords], 'sellouter');
+            ResponseHandler::success('Dati delle collections recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
         } catch (Exception $e) {
-            ResponseHandler::error('Error in fetching collection data', ['error' => $e->getMessage()], 'sellouter');
+            ResponseHandler::error('Errore nel recupero dei dati delle collections', ['errore' => $e->getMessage()], 'sellouter-error');
         }
     }
 }

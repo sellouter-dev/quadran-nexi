@@ -47,14 +47,14 @@ class SellerInventoryItemsController extends Controller
             $response = $client->get($jwksUrl);
             $jwks = json_decode($response->getBody(), true);
             $publicKeys = JWK::parseKeySet($jwks);
-            ResponseHandler::info("Public keys retrieved successfully", [], 'inventory');
+            ResponseHandler::info("Chiavi pubbliche recuperate correttamente dal JWKS", [], 'inventory-info');
             return $publicKeys;
         } catch (\Exception $e) {
-            ResponseHandler::error("Error retrieving public keys", [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine()
-            ], 'inventory');
+            ResponseHandler::error("Errore nel recupero delle chiavi pubbliche dal JWKS", [
+                'errore' => $e->getMessage(),
+                'file'   => $e->getFile(),
+                'linea'  => $e->getLine()
+            ], 'inventory-error');
             throw $e;
         }
     }
@@ -72,26 +72,26 @@ class SellerInventoryItemsController extends Controller
             $decoded = JWT::decode($token, $publicKeys);
 
             if ($decoded->exp < time()) {
-                ResponseHandler::error("JWT expired", ['exp' => $decoded->exp, 'now' => time()], 'inventory');
+                ResponseHandler::error("JWT scaduto", ['exp' => $decoded->exp, 'adesso' => time()], 'inventory-error');
                 return response()->json(['error' => 'ERROR 9020: JWT expired'], 401);
             }
 
             if (!isset($decoded->scope) || !in_array($this->requiredScope, explode(' ', $decoded->scope))) {
-                ResponseHandler::error("Scope check failed", [
+                ResponseHandler::error("Verifica dello scope fallita", [
                     'scope'    => $decoded->scope ?? null,
-                    'required' => $this->requiredScope
-                ], 'inventory');
+                    'richiesto' => $this->requiredScope
+                ], 'inventory-error');
                 return response()->json(['error' => 'ERROR 9030: Scope check failed'], 403);
             }
 
-            ResponseHandler::info("Token validated successfully", ['token' => $token], 'inventory');
+            ResponseHandler::success("Token JWT validato correttamente", ['token' => $token], 'inventory-success');
             return $decoded;
         } catch (\Exception $e) {
-            ResponseHandler::error("Signature validation failed", [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine()
-            ], 'inventory');
+            ResponseHandler::error("Validazione della firma del JWT fallita", [
+                'errore' => $e->getMessage(),
+                'file'   => $e->getFile(),
+                'linea'  => $e->getLine()
+            ], 'inventory-error');
             return response()->json(['error' => 'ERROR 9010: Signature validation failed', 'message' => $e->getMessage()], 401);
         }
     }
@@ -108,7 +108,7 @@ class SellerInventoryItemsController extends Controller
      *     @OA\Parameter(
      *         name="date_from",
      *         in="query",
-     *         description="Start date for filtering inventory items. Format: 2024-01-01",
+     *         description="Data inizio per filtrare gli inventory items. Formato: 2024-01-01",
      *         required=false,
      *         @OA\Schema(
      *             type="string",
@@ -118,7 +118,7 @@ class SellerInventoryItemsController extends Controller
      *     @OA\Parameter(
      *         name="date_to",
      *         in="query",
-     *         description="End date for filtering inventory items. Format: 2024-01-01",
+     *         description="Data fine per filtrare gli inventory items. Formato: 2024-01-01",
      *         required=false,
      *         @OA\Schema(
      *             type="string",
@@ -128,7 +128,7 @@ class SellerInventoryItemsController extends Controller
      *     @OA\Parameter(
      *         name="fnsku",
      *         in="query",
-     *         description="Filter by FNSKU",
+     *         description="Filtra per FNSKU",
      *         required=false,
      *         @OA\Schema(
      *             type="string"
@@ -137,7 +137,7 @@ class SellerInventoryItemsController extends Controller
      *     @OA\Parameter(
      *         name="asin",
      *         in="query",
-     *         description="Filter by ASIN",
+     *         description="Filtra per ASIN",
      *         required=false,
      *         @OA\Schema(
      *             type="string"
@@ -146,7 +146,7 @@ class SellerInventoryItemsController extends Controller
      *     @OA\Parameter(
      *         name="msku",
      *         in="query",
-     *         description="Filter by MSKU",
+     *         description="Filtra per MSKU",
      *         required=false,
      *         @OA\Schema(
      *             type="string"
@@ -155,7 +155,7 @@ class SellerInventoryItemsController extends Controller
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
-     *         description="Page number for pagination",
+     *         description="Numero di pagina per la paginazione",
      *         required=false,
      *         @OA\Schema(
      *             type="integer",
@@ -164,7 +164,7 @@ class SellerInventoryItemsController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="A list of inventory items",
+     *         description="Una lista di inventory items",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="data", type="array",
@@ -222,12 +222,12 @@ class SellerInventoryItemsController extends Controller
      */
     public function getInventory(Request $request)
     {
-        ResponseHandler::info("Received getInventory request", ['query_params' => $request->query()], 'inventory');
+        ResponseHandler::info("Richiesta per il recupero degli inventory items ricevuta", ['parametri_query' => $request->query()], 'inventory-info');
 
         $authHeader = $request->header('Authorization');
         if (!$authHeader || !preg_match('/Bearer\s(.*)/', $authHeader, $matches)) {
-            ResponseHandler::error("Missing or invalid Authorization header", [], 'inventory');
-            return response()->json(['message' => 'Unauthorized'], 401);
+            ResponseHandler::error("Header Authorization mancante o non valido", [], 'inventory-error');
+            return response()->json(['message' => 'Non autorizzato'], 401);
         }
 
         $token = $matches[1];
@@ -237,7 +237,7 @@ class SellerInventoryItemsController extends Controller
         }
 
         try {
-            ResponseHandler::info("Starting inventory query", ['token_valid' => true], 'inventory');
+            ResponseHandler::info("Avvio della query per il recupero degli inventory items (token valido)", ['token_valid' => true], 'inventory-info');
 
             $columns = [
                 'date',
@@ -292,11 +292,11 @@ class SellerInventoryItemsController extends Controller
             $offset = ($page - 1) * $limit;
             $inventoryItems = $query->offset($offset)->limit($limit)->get();
 
-            ResponseHandler::info("Inventory query successful", [
-                'total_items'    => $totalItems,
-                'returned_items' => count($inventoryItems),
-                'page'           => $page
-            ], 'inventory');
+            ResponseHandler::success("Query per il recupero degli inventory items eseguita con successo", [
+                'totale_item'    => $totalItems,
+                'item_ritornati' => count($inventoryItems),
+                'pagina'         => $page
+            ], 'inventory-success');
 
             $response = [
                 'data' => $inventoryItems,
@@ -310,18 +310,18 @@ class SellerInventoryItemsController extends Controller
 
             return response()->json($response, 200);
         } catch (\Exception $e) {
-            ResponseHandler::error("Error in getInventory", [
-                'error' => $e->getMessage(),
-                'code'  => $e->getCode(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ], 'inventory');
+            ResponseHandler::error("Errore durante il recupero degli inventory items", [
+                'errore' => $e->getMessage(),
+                'code'   => $e->getCode(),
+                'file'   => $e->getFile(),
+                'linea'  => $e->getLine(),
+                'trace'  => $e->getTraceAsString()
+            ], 'inventory-error');
             return response()->json([
                 'error' => $e->getMessage(),
                 'code'  => $e->getCode(),
                 'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
+                'linea' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ], 500);
         }

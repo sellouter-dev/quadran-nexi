@@ -41,33 +41,49 @@ class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
     }
 
     /**
-     * Execute the job.
+     * Esegue il job.
      *
      * @return void
      */
     public function handle()
     {
-        ResponseHandler::info('Job DownloadFlatfileVatInvoiceDataJob started', [
-            'job_id' => $this->job->getJobId(),
-            'queue'  => $this->job->getQueue(),
-        ], 'sellouter');
+        ResponseHandler::info(
+            'Job DownloadFlatfileVatInvoiceDataJob avviato',
+            [
+                'job_id' => $this->job->getJobId(),
+                'queue'  => $this->job->getQueue(),
+            ],
+            'sellouter-info'
+        );
 
         try {
-            ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'sellouter');
+            ResponseHandler::info(
+                'Avvio del download dei dati Flatfile VAT Invoice',
+                [],
+                'sellouter-info'
+            );
 
             $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
             $this->csvDataGeneratorService->generateFlatfileVatCSV();
 
-            ResponseHandler::success('Job DownloadFlatfileVatInvoiceDataJob executed successfully.', [
-                'job_id' => $this->job->getJobId(),
-            ], 'sellouter');
+            ResponseHandler::success(
+                'Job DownloadFlatfileVatInvoiceDataJob eseguito con successo.',
+                [
+                    'job_id' => $this->job->getJobId(),
+                ],
+                'sellouter-success'
+            );
         } catch (\Exception $e) {
-            ResponseHandler::error('Error executing DownloadFlatfileVatInvoiceDataJob', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ], 'sellouter');
+            ResponseHandler::error(
+                'Errore durante l\'esecuzione del job DownloadFlatfileVatInvoiceDataJob',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'   => $e->getFile(),
+                    'linea'  => $e->getLine(),
+                    'trace'  => $e->getTraceAsString(),
+                ],
+                'sellouter-error'
+            );
         }
     }
 }

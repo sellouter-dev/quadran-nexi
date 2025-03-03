@@ -32,32 +32,48 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
     }
 
     /**
-     * Execute the job.
+     * Esegue il job.
      *
      * @return void
      */
     public function handle()
     {
-        ResponseHandler::info('Job SaveSellerInventoryItemsJob started', [
-            'job_id' => $this->job->getJobId(),
-            'queue'  => $this->job->getQueue(),
-        ], 'inventory');
+        ResponseHandler::info(
+            'Job SaveSellerInventoryItemsJob avviato',
+            [
+                'job_id' => $this->job->getJobId(),
+                'queue'  => $this->job->getQueue(),
+            ],
+            'sellouter-info'
+        );
 
         try {
-            ResponseHandler::info('Starting seller inventory items data save process', [], 'inventory');
+            ResponseHandler::info(
+                'Avvio del processo di salvataggio dei dati degli Seller Inventory Items',
+                [],
+                'sellouter-info'
+            );
 
             $this->apiDataFetcherService->fetchAndSaveDataSellerInventoryItemsApi();
 
-            ResponseHandler::success('Job SaveSellerInventoryItemsJob executed successfully.', [
-                'job_id' => $this->job->getJobId(),
-            ], 'inventory');
+            ResponseHandler::success(
+                'Job SaveSellerInventoryItemsJob eseguito con successo.',
+                [
+                    'job_id' => $this->job->getJobId(),
+                ],
+                'sellouter-success'
+            );
         } catch (\Exception $e) {
-            ResponseHandler::error('Error executing SaveSellerInventoryItemsJob', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ], 'inventory');
+            ResponseHandler::error(
+                'Errore durante l\'esecuzione del job SaveSellerInventoryItemsJob',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'   => $e->getFile(),
+                    'linea'  => $e->getLine(),
+                    'trace'  => $e->getTraceAsString(),
+                ],
+                'sellouter-error'
+            );
         }
     }
 }

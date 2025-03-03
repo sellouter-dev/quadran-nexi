@@ -47,30 +47,46 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
      */
     public function handle()
     {
-        ResponseHandler::info('Job DownloadDataCalculationComputedJob started', [
-            'job_id' => $this->job->getJobId(),
-            'queue'  => $this->job->getQueue(),
-        ], 'sellouter');
+        ResponseHandler::info(
+            'Job DownloadDataCalculationComputedJob avviato',
+            [
+                'job_id' => $this->job->getJobId(),
+                'queue'  => $this->job->getQueue(),
+            ],
+            'sellouter-info'
+        );
 
         try {
-            // Step 1: Avvio del processo di download
-            ResponseHandler::info('Starting data calculation download', [], 'sellouter');
+            // Step 1: Avvio del processo di download dei dati per il calcolo
+            ResponseHandler::info(
+                'Avvio del download dei dati per il calcolo',
+                [],
+                'sellouter-info'
+            );
 
             $this->apiDataFetcherService->fetchAndStoreInvoiceData();
             $this->csvDataGeneratorService->generateInvoiceCSV();
 
-            // Step 2: Job completato con successo
-            ResponseHandler::success('Job DownloadDataCalculationComputedJob executed successfully.', [
-                'job_id' => $this->job->getJobId(),
-            ], 'sellouter');
+            // Step 2: Completamento del job con successo
+            ResponseHandler::success(
+                'Job DownloadDataCalculationComputedJob eseguito con successo.',
+                [
+                    'job_id' => $this->job->getJobId(),
+                ],
+                'sellouter-success'
+            );
         } catch (\Exception $e) {
             // Step 3: Gestione dell'errore
-            ResponseHandler::error('Error executing DownloadDataCalculationComputedJob', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ], 'sellouter');
+            ResponseHandler::error(
+                'Errore durante l\'esecuzione del job DownloadDataCalculationComputedJob',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'   => $e->getFile(),
+                    'linea'  => $e->getLine(),
+                    'trace'  => $e->getTraceAsString(),
+                ],
+                'sellouter-error'
+            );
         }
     }
 }

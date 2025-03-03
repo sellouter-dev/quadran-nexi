@@ -9,59 +9,56 @@ use Illuminate\Http\JsonResponse;
 use phpseclib3\Crypt\PublicKeyLoader;
 use Exception;
 
-/**
- * Class FileEncryptionService
- *
- * Gestisce la crittografia dei file e il loro caricamento su un server SFTP.
- * Tutti i log vengono scritti utilizzando il channel "muvi".
- *
- * @package App\Services
- */
 class FileEncryptionService
 {
     protected $sftpHost;
     protected $sftpUsername;
-    protected $sftpPassword;
     protected $publicKeyPath;
     protected $gnupg;
     protected $publicKeyFingerprint;
 
     /**
-     * FileEncryptionService constructor.
+     * Flag che indica se la chiave pubblica è disponibile
+     * (cioè è stata letta e importata correttamente).
      *
-     * Inizializza le variabili d'ambiente, il percorso della chiave pubblica e importa la chiave.
-     *
-     * @throws Exception Se l'estensione PHP gnupg non è installata.
+     * @var bool
      */
+    protected $keyAvailable = false;
+
     public function __construct()
     {
         try {
             $this->sftpHost = env('SFTP_HOST');
             $this->sftpUsername = env('SFTP_USERNAME');
-            $this->sftpPassword = env('SFTP_PASSWORD');
             $this->publicKeyPath = storage_path('app/keys/sap@nexi.it.key');
 
             putenv("GNUPGHOME=" . storage_path('app/keys'));
 
             if (!class_exists('gnupg')) {
-                throw new Exception('L\'estensione PHP gnupg non è installata.');
+                ResponseHandler::error(
+                    'Estensione PHP gnupg non installata. Crittografia disabilitata.',
+                    [],
+                    'muvi-error'
+                );
+                return;
             }
 
             $this->gnupg = new gnupg();
             $this->importPublicKey();
         } catch (Exception $e) {
-            ResponseHandler::error('Exception in FileEncryptionService constructor', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine()
-            ], 'muvi');
-            throw $e;
+            ResponseHandler::error(
+                'Eccezione nel costruttore di FileEncryptionService',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'  => $e->getFile(),
+                    'linea'  => $e->getLine()
+                ],
+                'muvi-error'
+            );
         }
     }
 
     /**
-     * importPublicKey
-     *
      * Importa la chiave pubblica necessaria per la crittografia.
      *
      * @return void
@@ -69,34 +66,54 @@ class FileEncryptionService
     private function importPublicKey()
     {
         try {
-            ResponseHandler::info('Importing public key', ['path' => $this->publicKeyPath], 'muvi');
+            ResponseHandler::info('Importazione della chiave pubblica', ['percorso' => $this->publicKeyPath], 'muvi-info');
+
+            if (!file_exists($this->publicKeyPath)) {
+                ResponseHandler::warning("File della chiave pubblica non trovato in {$this->publicKeyPath}. La crittografia verrà saltata.", [], 'muvi-warning');
+                $this->publicKeyFingerprint = null;
+                return;
+            }
+
 
             $publicKey = file_get_contents($this->publicKeyPath);
             if ($publicKey === false) {
-                throw new Exception("Unable to read public key file at {$this->publicKeyPath}");
+                ResponseHandler::warning("Impossibile leggere il file della chiave pubblica in {$this->publicKeyPath}. La crittografia verrà saltata.", [], 'muvi-warning');
+                $this->publicKeyFingerprint = null;
+                return;
             }
+
 
             $importResult = $this->gnupg->import($publicKey);
             if ($importResult === false) {
-                ResponseHandler::error('Importazione della chiave pubblica fallita.', ['error' => $this->gnupg->geterror()], 'muvi');
-                throw new Exception('Importazione della chiave pubblica fallita.');
+                ResponseHandler::error(
+                    'Importazione della chiave pubblica fallita.',
+                    ['errore' => $this->gnupg->geterror()],
+                    'muvi-error'
+                );
+                $this->publicKeyFingerprint = null;
+                return;
             }
 
             $this->publicKeyFingerprint = $importResult['fingerprint'];
-            ResponseHandler::success('Public key imported successfully', [], 'muvi');
+            ResponseHandler::success('Chiave pubblica importata con successo', [], 'muvi-success');
+
+            ResponseHandler::info('Processo di importazione della chiave pubblica completato', ['fingerprint' => $this->publicKeyFingerprint], 'muvi-info');
+            $this->keyAvailable = true;
         } catch (Exception $e) {
-            ResponseHandler::error('Exception during public key import', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-            ], 'muvi');
+            ResponseHandler::error(
+                'Eccezione durante l\'importazione della chiave pubblica',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'  => $e->getFile(),
+                    'linea'  => $e->getLine(),
+                ],
+                'muvi-error'
+            );
             throw $e;
         }
     }
 
     /**
-     * encrypt
-     *
      * Esegue la crittografia dei dati utilizzando la chiave pubblica importata.
      *
      * @param mixed $data Dati da crittografare.
@@ -104,135 +121,177 @@ class FileEncryptionService
      */
     public function encrypt($data)
     {
+        if (!$this->keyAvailable) {
+            ResponseHandler::warning(
+                'Crittografia saltata perché la chiave pubblica non è disponibile.',
+                [],
+                'muvi-warning'
+            );
+            return $data;
+        }
+
         try {
-            ResponseHandler::info('Starting file encryption', [], 'muvi');
+            ResponseHandler::info('Inizio della crittografia del file', [], 'muvi-info');
             $this->gnupg->addencryptkey($this->publicKeyFingerprint);
             $encrypted = $this->gnupg->encrypt($data);
 
             if ($encrypted === false) {
-                throw new Exception('Encryption failed: ' . $this->gnupg->geterror());
+                throw new Exception('Crittografia fallita: ' . $this->gnupg->geterror());
             }
 
-            ResponseHandler::success('File encrypted successfully', [], 'muvi');
+            ResponseHandler::success('File crittografato con successo', [], 'muvi-success');
+
+            ResponseHandler::info('Processo di crittografia del file completato', [], 'muvi-info');
             return $encrypted;
         } catch (Exception $e) {
-            ResponseHandler::error('Error during encryption', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine()
-            ], 'muvi');
+            ResponseHandler::error(
+                'Errore durante la crittografia',
+                [
+                    'messaggio' => $e->getMessage(),
+                    'file'    => $e->getFile(),
+                    'linea'    => $e->getLine()
+                ],
+                'muvi-error'
+            );
             return false;
         }
     }
 
     /**
-     * upload
-     *
      * Carica i dati crittografati su un server SFTP utilizzando l'autenticazione tramite chiave privata.
      *
-     * @param mixed  $encryptedData Dati crittografati da caricare.
+     * @param mixed  $encryptedData Dati (eventualmente crittografati) da caricare.
      * @param string $remoteFilePath Nome del file remoto.
      * @return bool True se il caricamento ha avuto successo, false altrimenti.
      */
     private function upload($encryptedData, $remoteFilePath)
     {
         try {
-            ResponseHandler::info('Connecting to SFTP server using SSH key', [
+            ResponseHandler::info('Connessione al server SFTP utilizzando la chiave SSH', [
                 'host' => $this->sftpHost,
                 'username' => $this->sftpUsername,
-            ], 'muvi');
+            ], 'muvi-info');
 
             $sftp = new SFTP($this->sftpHost);
 
-            // Percorso alla chiave privata SSH
+
             $privateKeyPath = storage_path('app/keys/ftps');
             $privateKey = file_get_contents($privateKeyPath);
 
             if ($privateKey === false) {
-                throw new Exception("Unable to read private key from: $privateKeyPath");
+                throw new Exception("Impossibile leggere la chiave privata da: $privateKeyPath");
             }
 
-            // Autenticazione con chiave privata
             $key = PublicKeyLoader::load($privateKey);
-            ResponseHandler::info('Logging in to SFTP server using SSH key', ['private_key_loaded' => true], 'muvi');
+            ResponseHandler::info('Accesso al server SFTP con chiave SSH', [
+                'chiave_privata_caricata' => true
+            ], 'muvi-info');
 
             if (!$sftp->login($this->sftpUsername, $key)) {
-                ResponseHandler::error('Login to SFTP server failed using SSH key.', [], 'muvi');
+                ResponseHandler::error('Accesso al server SFTP fallito utilizzando la chiave SSH.', [], 'muvi-error');
                 return false;
             }
+
 
             if (env("CRYPT_DATA")) {
                 $remoteFilePath .= '.gpg';
             }
 
-            ResponseHandler::info('Uploading file to SFTP via SSH', ['remote_path' => $remoteFilePath], 'muvi');
+            ResponseHandler::info('Caricamento del file su SFTP tramite SSH', ['percorso_remoto' => $remoteFilePath], 'muvi-info');
 
             if (!$sftp->put("/upload/" . $remoteFilePath, $encryptedData)) {
-                ResponseHandler::error('File upload failed', ['remote_path' => $remoteFilePath], 'muvi');
+                ResponseHandler::error('Caricamento del file fallito', ['percorso_remoto' => $remoteFilePath], 'muvi-error');
                 return false;
             }
 
-            ResponseHandler::success('File uploaded successfully using SSH key', ['remote_path' => $remoteFilePath], 'muvi');
+            ResponseHandler::success(
+                'File caricato con successo utilizzando la chiave SSH',
+                ['percorso_remoto' => $remoteFilePath],
+                'muvi-success'
+            );
+
+            ResponseHandler::info('Processo di caricamento del file completato', ['percorso_remoto' => $remoteFilePath], 'muvi-info');
             return true;
         } catch (Exception $e) {
-            ResponseHandler::error('Error during file upload via SSH', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine()
-            ], 'muvi');
+            ResponseHandler::error(
+                'Errore durante il caricamento del file tramite SSH',
+                [
+                    'messaggio' => $e->getMessage(),
+                    'file'    => $e->getFile(),
+                    'linea'    => $e->getLine()
+                ],
+                'muvi-error'
+            );
             return false;
         }
     }
 
     /**
-     * saveFile
-     *
-     * Legge il contenuto di un file, lo crittografa (se abilitato) e lo carica su un server SFTP.
+     * Legge il contenuto di un file, lo crittografa (se abilitato e se la chiave è disponibile)
+     * e lo carica su un server SFTP.
      *
      * @param string $filePath Percorso completo del file da elaborare.
      * @return JsonResponse Risposta JSON con l'esito dell'operazione.
      */
     public function saveFile($filePath): JsonResponse
     {
-        ResponseHandler::info('Starting file save process', ['file_path' => $filePath], 'muvi');
+        ResponseHandler::info('Inizio del processo di salvataggio del file', ['percorso_file' => $filePath], 'muvi-info');
 
         try {
             $fileContent = file_get_contents($filePath);
             if ($fileContent === false) {
-                ResponseHandler::error("Cannot read file", ['file_path' => $filePath], 'muvi');
-                return response()->json(['message' => 'Error reading file.'], 500);
+                ResponseHandler::error("Impossibile leggere il file", ['percorso_file' => $filePath], 'muvi-error');
+                return response()->json(['messaggio' => 'Errore nella lettura del file.'], 500);
             }
 
             $remoteFilePath = basename($filePath);
 
             if (env("CRYPT_DATA")) {
-                ResponseHandler::info('Encrypting file before upload', ['file_path' => $filePath], 'muvi');
+                ResponseHandler::info('Crittografia del file prima del caricamento', ['percorso_file' => $filePath], 'muvi-info');
                 $encryptedData = $this->encrypt($fileContent);
 
                 if ($encryptedData === false) {
-                    return response()->json(['message' => 'Error during encryption.'], 500);
+                    ResponseHandler::error(
+                        "Crittografia fallita (o saltata) per il file: $filePath",
+                        [],
+                        'muvi-error'
+                    );
+                    return response()->json(['messaggio' => 'Errore durante la crittografia.'], 500);
                 }
             } else {
                 $encryptedData = $fileContent;
             }
 
             if (!$this->upload($encryptedData, $remoteFilePath)) {
-                throw new Exception('File upload failed.');
+                throw new Exception('Caricamento del file fallito.');
             }
 
-            ResponseHandler::success('File saved and uploaded successfully', ['file_path' => $filePath], 'muvi');
-            return response()->json(['message' => 'File and semaphore uploaded successfully.']);
-        } catch (Exception $e) {
-            ResponseHandler::error('Exception in saveFile', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-            ], 'muvi');
+            ResponseHandler::success(
+                'File salvato e caricato con successo',
+                ['percorso_file' => $filePath],
+                'muvi-success'
+            );
+
+            ResponseHandler::info('Processo di salvataggio del file completato', ['percorso_file' => $filePath], 'muvi-info');
 
             return response()->json([
-                'error' => $e->getMessage(),
-                'code'  => $e->getCode()
+                'messaggio' => 'File e semaphore caricati con successo.'
+            ]);
+        } catch (Exception $e) {
+            ResponseHandler::error(
+                'Eccezione in saveFile',
+                [
+                    'errore' => $e->getMessage(),
+                    'file'  => $e->getFile(),
+                    'linea'  => $e->getLine(),
+                    'traccia' => $e->getTraceAsString(),
+                ],
+                'muvi-error'
+            );
+
+            return response()->json([
+                'errore' => $e->getMessage(),
+                'codice'  => $e->getCode()
             ], 500);
         }
     }
