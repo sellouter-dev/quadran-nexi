@@ -92,9 +92,9 @@ return [
             'path' => storage_path('logs/muvi/muvi-info.log'),
             'level' => 'info',
         ],
-        'muvi-warining' => [
+        'muvi-warning' => [
             'driver' => 'single',
-            'path' => storage_path('logs/muvi/muvi-warining.log'),
+            'path' => storage_path('logs/muvi/muvi-warning.log'),
             'level' => 'warning',
         ],
 
@@ -113,9 +113,9 @@ return [
             'path' => storage_path('logs/inventory/inventory-info.log'),
             'level' => 'info',
         ],
-        'inventory-warining' => [
+        'inventory-warning' => [
             'driver' => 'single',
-            'path' => storage_path('logs/inventory/inventory-warining.log'),
+            'path' => storage_path('logs/inventory/inventory-warning.log'),
             'level' => 'warning',
         ],
 
@@ -134,9 +134,9 @@ return [
             'path' => storage_path('logs/sellouter/sellouter-info.log'),
             'level' => 'info',
         ],
-        'sellouter-warining' => [
+        'sellouter-warning' => [
             'driver' => 'single',
-            'path' => storage_path('logs/sellouter/sellouter-warining.log'),
+            'path' => storage_path('logs/sellouter/sellouter-warning.log'),
             'level' => 'warning',
         ],
 
@@ -155,9 +155,9 @@ return [
             'path' => storage_path('logs/csv/csv-info.log'),
             'level' => 'info',
         ],
-        'csv-warining' => [
+        'csv-warning' => [
             'driver' => 'single',
-            'path' => storage_path('logs/csv/csv-warining.log'),
+            'path' => storage_path('logs/csv/csv-warning.log'),
             'level' => 'warning',
         ]
     ],
