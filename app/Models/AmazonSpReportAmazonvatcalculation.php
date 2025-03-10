@@ -4,21 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class AmazonSpReportAmazonvatcalculation extends Model
 {
     use HasFactory;
 
     protected $table = 'amazon_sp_report_amazonvatcalculation';
-
-    protected $casts = [
-        'order_id' => 'string',
-    ];
+    protected $primaryKey = 'id'; // Chiave primaria della tabella
+    public $incrementing = true; // Auto-incremento abilitato
+    protected $keyType = 'int'; // Tipo intero per la chiave primaria
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'requesttime',
@@ -95,6 +93,8 @@ class AmazonSpReportAmazonvatcalculation extends Model
         'transaction_id',
         'transaction_type',
         'vat_invoice_number',
+        'created_at',
+        'updated_at',
     ];
 
     /**
@@ -105,11 +105,65 @@ class AmazonSpReportAmazonvatcalculation extends Model
      */
     public static function saveData(array $data)
     {
-        self::updateOrCreate(
-            [
-                'order_id' => $data['order_id']
-            ],
-            $data
-        );
+        $mappedData = [
+            'requesttime' => isset($data['requesttime']) ? Carbon::parse($data['requesttime']) : null,
+            'order_id' => $data['order_id'] ?? null,
+            'asin' => $data['asin'] ?? null,
+            'buyer_e_invoice_account_id' => $data['buyer_e_invoice_account_id'] ?? null,
+            'buyer_tax_registration' => $data['buyer_tax_registration'] ?? null,
+            'buyer_tax_registration_jurisdiction' => $data['buyer_tax_registration_jurisdiction'] ?? null,
+            'buyer_tax_registration_type' => $data['buyer_tax_registration_type'] ?? null,
+            'converted_tax_amount' => (float) $data['converted_tax_amount'],
+            'currency' => $data['currency'] ?? null,
+            'einvoice_url' => $data['einvoice_url'] ?? null,
+            'export_outside_eu' => isset($data['export_outside_eu']) ? ($data['export_outside_eu'] ? '1' : '0') : null,
+            'giftwrap_tax_amount' => (float) $data['giftwrap_tax_amount'],
+            'giftwrap_tax_amount_promo' => (float) $data['giftwrap_tax_amount_promo'],
+            'giftwrap_tax_exclusive_promo_amount' => (float) $data['giftwrap_tax_exclusive_promo_amount'],
+            'giftwrap_tax_exclusive_selling_price' => (float) $data['giftwrap_tax_exclusive_selling_price'],
+            'giftwrap_tax_inclusive_promo_amount' => (float) $data['giftwrap_tax_inclusive_promo_amount'],
+            'giftwrap_tax_inclusive_selling_price' => (float) $data['giftwrap_tax_inclusive_selling_price'],
+            'invoice_correction_details' => $data['invoice_correction_details'] ?? null,
+            'invoice_level_currency_code' => $data['invoice_level_currency_code'] ?? null,
+            'invoice_level_exchange_rate' => (float) $data['invoice_level_exchange_rate'],
+            'invoice_level_exchange_rate_date' => isset($data['invoice_level_exchange_rate_date']) ? Carbon::parse($data['invoice_level_exchange_rate_date']) : null,
+            'invoice_url' => $data['invoice_url'] ?? null,
+            'is_amazon_invoiced' => isset($data['is_amazon_invoiced']) ? ($data['is_amazon_invoiced'] ? '1' : '0') : null,
+            'is_invoice_corrected' => isset($data['is_invoice_corrected']) ? ($data['is_invoice_corrected'] ? '1' : '0') : null,
+            'jurisdiction_level' => $data['jurisdiction_level'] ?? null,
+            'jurisdiction_name' => $data['jurisdiction_name'] ?? null,
+            'marketplace_id' => $data['marketplace_id'] ?? null,
+            'merchant_id' => $data['merchant_id'] ?? null,
+            'order_date' => isset($data['order_date']) ? Carbon::parse($data['order_date'])->toDateString() : null,
+            'original_vat_invoice_number' => $data['original_vat_invoice_number'] ?? null,
+            'our_price_tax_amount' => (float) $data['our_price_tax_amount'],
+            'our_price_tax_exclusive_selling_price' => (float) $data['our_price_tax_exclusive_selling_price'],
+            'product_tax_code' => $data['product_tax_code'] ?? null,
+            'quantity' => (int) $data['quantity'],
+            'seller_tax_registration' => $data['seller_tax_registration'] ?? null,
+            'seller_tax_registration_jurisdiction' => $data['seller_tax_registration_jurisdiction'] ?? null,
+            'ship_from_city' => $data['ship_from_city'] ?? null,
+            'ship_from_country' => $data['ship_from_country'] ?? null,
+            'ship_from_postal_code' => $data['ship_from_postal_code'] ?? null,
+            'ship_from_state' => $data['ship_from_state'] ?? null,
+            'ship_to_city' => $data['ship_to_city'] ?? null,
+            'ship_to_country' => $data['ship_to_country'] ?? null,
+            'ship_to_postal_code' => $data['ship_to_postal_code'] ?? null,
+            'ship_to_state' => $data['ship_to_state'] ?? null,
+            'shipment_date' => isset($data['shipment_date']) ? Carbon::parse($data['shipment_date'])->toDateString() : null,
+            'shipment_id' => $data['shipment_id'] ?? null,
+            'sku' => $data['sku'] ?? null,
+            'tax_address_role' => $data['tax_address_role'] ?? null,
+            'tax_rate' => (float) $data['tax_rate'],
+            'tax_type' => $data['tax_type'] ?? null,
+            'transaction_id' => $data['transaction_id'] ?? null,
+            'transaction_type' => $data['transaction_type'] ?? null,
+            'vat_invoice_number' => $data['vat_invoice_number'] ?? null,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ];
+
+        // Inserisce o aggiorna il record
+        self::updateOrCreate(['order_id' => $mappedData['order_id']], $mappedData);
     }
 }

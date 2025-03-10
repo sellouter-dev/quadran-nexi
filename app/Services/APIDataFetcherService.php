@@ -3,10 +3,8 @@
 namespace App\Services;
 
 use Exception;
-use App\Models\InvoiceTrack;
 use App\Models\SellerInventoryItem;
 use App\Services\DataGeneratorAmazon;
-use App\Models\FlatfileVatInvoiceData;
 use App\Models\AmazonSpReportAmazonvatcalculation;
 use App\Models\AmazonSpReportFlatfilev2settlement;
 use App\Models\AmazonSpReportFlatfilevatinvoicedatavidr;
@@ -108,7 +106,6 @@ class APIDataFetcherService
         try {
             $response = $this->dataGenerator->callVatCalculationApi();
             $totalRecords = count($response);
-
             foreach ($response as $row) {
                 AmazonSpReportFlatfilevatinvoicedatavidr::saveData($row);
             }
@@ -134,7 +131,7 @@ class APIDataFetcherService
         try {
             $response = $this->dataGenerator->callFlatfileVatInvoiceDataApi();
             $totalRecords = count($response);
-
+            ResponseHandler::info('Elaborazione dei dati Flatfile VAT Invoice', ['response' => $response], 'sellouter-info');
             foreach ($response as $row) {
                 AmazonSpReportAmazonvatcalculation::saveData($row);
             }

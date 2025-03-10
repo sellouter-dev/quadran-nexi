@@ -2,22 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AmazonSpReportFlatfilevatinvoicedatavidr extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'order_id';
-
     protected $table = 'amazon_sp_report_flatfilevatinvoicedatavidr';
 
-    public $timestamps = false;
-
-    protected $casts = [
-        'order_id' => 'string',
-    ];
+    protected $primaryKey = 'id'; // Imposta 'id' come chiave primaria
+    public $incrementing = true; // Abilita l'auto-incremento
+    protected $keyType = 'int'; // Specifica che 'id' è di tipo intero
 
     protected $fillable = [
         'requesttime',
@@ -121,11 +118,103 @@ class AmazonSpReportFlatfilevatinvoicedatavidr extends Model
      */
     public static function saveData(array $data)
     {
-        self::updateOrCreate(
-            [
-                'order_id' => $data['order_id']
-            ],
-            $data
-        );
+        $mappedData = [
+            'requesttime' => isset($data['requesttime']) ? Carbon::parse($data['requesttime']) : null,
+            'marketplace' => $data['marketplace'] ?? null,
+            'asin' => $data['asin'] ?? null,
+            'sku' => $data['sku'] ?? null,
+            'order_id' => $data['order_id'] ?? null,
+            'order_item_id' => $data['order_item_id'] ?? null,
+            'shipment_date' => isset($data['shipment_date']) ? Carbon::parse($data['shipment_date']) : null,
+            'order_date' => isset($data['order_date']) ? Carbon::parse($data['order_date']) : null,
+            'bill_address_1' => $data['bill_address_1'] ?? null,
+            'bill_address_2' => $data['bill_address_2'] ?? null,
+            'bill_address_3' => $data['bill_address_3'] ?? null,
+            'bill_city' => $data['bill_city'] ?? null,
+            'bill_country' => $data['bill_country'] ?? null,
+            'bill_postal_code' => $data['bill_postal_code'] ?? null,
+            'bill_state' => $data['bill_state'] ?? null,
+            'billing_name' => $data['billing_name'] ?? null,
+            'billing_phone_number' => $data['billing_phone_number'] ?? null,
+            'buyer_company_name' => $data['buyer_company_name'] ?? null,
+            'buyer_e_invoice_account_id' => $data['buyer_e_invoice_account_id'] ?? null,
+            'buyer_name' => $data['buyer_name'] ?? null,
+            'buyer_tax_registration_type' => $data['buyer_tax_registration_type'] ?? null,
+            'buyer_vat_number' => $data['buyer_vat_number'] ?? null,
+            'citation_de' => $data['citation_de'] ?? null,
+            'citation_en' => $data['citation_en'] ?? null,
+            'citation_es' => $data['citation_es'] ?? null,
+            'citation_fr' => $data['citation_fr'] ?? null,
+            'citation_it' => $data['citation_it'] ?? null,
+            'currency' => $data['currency'] ?? null,
+            'export_outside_eu' => isset($data['export_outside_eu']) ? ($data['export_outside_eu'] ? '1' : '0') : null,
+            'fulfilled_by' => $data['fulfilled_by'] ?? null,
+            'gift_promo_vat_amount' => (float) $data['gift_promo_vat_amount'],
+            'gift_promo_vat_excl_amount' => (float) $data['gift_promo_vat_excl_amount'],
+            'gift_promo_vat_incl_amount' => (float) $data['gift_promo_vat_incl_amount'],
+            'gift_promo_vat_rate' => (float) $data['gift_promo_vat_rate'],
+            'gift_promotion_id' => $data['gift_promotion_id'] ?? null,
+            'gift_wrap_vat_amount' => (float) $data['gift_wrap_vat_amount'],
+            'gift_wrap_vat_excl_amount' => (float) $data['gift_wrap_vat_excl_amount'],
+            'gift_wrap_vat_incl_amount' => (float) $data['gift_wrap_vat_incl_amount'],
+            'gift_wrap_vat_rate' => (float) $data['gift_wrap_vat_rate'],
+            'invoice_correction_details' => $data['invoice_correction_details'] ?? null,
+            'invoice_number' => $data['invoice_number'] ?? null,
+            'invoice_status' => $data['invoice_status'] ?? null,
+            'invoice_status_description' => $data['invoice_status_description'] ?? null,
+            'is_amazon_invoiced' => isset($data['is_amazon_invoiced']) ? ($data['is_amazon_invoiced'] ? '1' : '0') : null,
+            'is_business_order' => isset($data['is_business_order']) ? ($data['is_business_order'] ? '1' : '0') : null,
+            'is_buyer_physically_present' => isset($data['is_buyer_physically_present']) ? ($data['is_buyer_physically_present'] ? '1' : '0') : null,
+            'is_invoice_corrected' => isset($data['is_invoice_corrected']) ? ($data['is_invoice_corrected'] ? '1' : '0') : null,
+            'is_seller_physically_present' => isset($data['is_seller_physically_present']) ? ($data['is_seller_physically_present'] ? '1' : '0') : null,
+            'item_promo_vat_amount' => (float) $data['item_promo_vat_amount'],
+            'item_promo_vat_excl_amount' => (float) $data['item_promo_vat_excl_amount'],
+            'item_promo_vat_incl_amount' => (float) $data['item_promo_vat_incl_amount'],
+            'item_promo_vat_rate' => (float) $data['item_promo_vat_rate'],
+            'item_promotion_id' => $data['item_promotion_id'] ?? null,
+            'item_vat_amount' => (float) $data['item_vat_amount'],
+            'item_vat_excl_amount' => (float) $data['item_vat_excl_amount'],
+            'item_vat_incl_amount' => (float) $data['item_vat_incl_amount'],
+            'item_vat_rate' => (float) $data['item_vat_rate'],
+            'legacy_customer_order_item_id' => $data['legacy_customer_order_item_id'] ?? null,
+            'original_vat_invoice_number' => $data['original_vat_invoice_number'] ?? null,
+            'price_designation' => $data['price_designation'] ?? null,
+            'product_name' => $data['product_name'] ?? null,
+            'purchase_order_number' => $data['purchase_order_number'] ?? null,
+            'quantity_purchased' => (int) $data['quantity_purchased'],
+            'recipient_name' => $data['recipient_name'] ?? null,
+            'recommended_invoice_format' => $data['recommended_invoice_format'] ?? null,
+            'seller_vat_number' => $data['seller_vat_number'] ?? null,
+            'ship_address_1' => $data['ship_address_1'] ?? null,
+            'ship_address_2' => $data['ship_address_2'] ?? null,
+            'ship_address_3' => $data['ship_address_3'] ?? null,
+            'ship_city' => $data['ship_city'] ?? null,
+            'ship_country' => $data['ship_country'] ?? null,
+            'ship_from_city' => $data['ship_from_city'] ?? null,
+            'ship_from_country' => $data['ship_from_country'] ?? null,
+            'ship_from_postal_code' => $data['ship_from_postal_code'] ?? null,
+            'ship_from_state' => $data['ship_from_state'] ?? null,
+            'ship_phone_number' => $data['ship_phone_number'] ?? null,
+            'ship_postal_code' => $data['ship_postal_code'] ?? null,
+            'ship_promotion_id' => $data['ship_promotion_id'] ?? null,
+            'ship_service_level' => $data['ship_service_level'] ?? null,
+            'ship_state' => $data['ship_state'] ?? null,
+            'shipping_id' => $data['shipping_id'] ?? null,
+            'shipping_promo_vat_amount' => (float) $data['shipping_promo_vat_amount'],
+            'shipping_promo_vat_excl_amount' => (float) $data['shipping_promo_vat_excl_amount'],
+            'shipping_promo_vat_incl_amount' => (float) $data['shipping_promo_vat_incl_amount'],
+            'shipping_promo_vat_rate' => (float) $data['shipping_promo_vat_rate'],
+            'shipping_vat_amount' => (float) $data['shipping_vat_amount'],
+            'shipping_vat_excl_amount' => (float) $data['shipping_vat_excl_amount'],
+            'shipping_vat_incl_amount' => (float) $data['shipping_vat_incl_amount'],
+            'shipping_vat_rate' => (float) $data['shipping_vat_rate'],
+            'transaction_id' => $data['transaction_id'] ?? null,
+            'transaction_type' => $data['transaction_type'] ?? null,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ];
+
+        // Inserisce o aggiorna il record
+        self::updateOrCreate(['order_id' => $mappedData['order_id']], $mappedData);
     }
 }
