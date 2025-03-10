@@ -18,3 +18,10 @@ nome da dare: quadran-nexi
 > php artisan schedule:work
 > php artisan queue:work
 > php artisan schedule:run
+
+## Comandi
+
+> php artisan app:download-flatfile-vat-invoice-data-command
+> php artisan app:download-collections-data-command
+> php artisan app:save-seller-inventory-items-command
+> php artisan app:download-data-calculation-computed-command
