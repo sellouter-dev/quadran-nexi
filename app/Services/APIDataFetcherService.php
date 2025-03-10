@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use Exception;
 use App\Models\InvoiceTrack;
-use App\Models\DataCollection;
 use App\Models\SellerInventoryItem;
 use App\Services\DataGeneratorAmazon;
 use App\Models\FlatfileVatInvoiceData;
-use Exception;
+use App\Models\AmazonSpReportAmazonvatcalculation;
+use App\Models\AmazonSpReportFlatfilev2settlement;
+use App\Models\AmazonSpReportFlatfilevatinvoicedatavidr;
 
 class APIDataFetcherService
 {
@@ -35,6 +37,7 @@ class APIDataFetcherService
      */
     public function fetchAndSaveDataSellerInventoryItemsApi()
     {
+        ini_set('memory_limit', '-1');
         // Log di inizio processo
         ResponseHandler::info('Avvio del processo di salvataggio per Seller Inventory Items API', [], 'sellouter-info');
 
@@ -99,6 +102,7 @@ class APIDataFetcherService
      */
     public function fetchAndStoreInvoiceData()
     {
+        ini_set('memory_limit', '-1');
         ResponseHandler::info('Recupero dati per il calcolo dell\'IVA', [], 'sellouter-info');
 
         try {
@@ -106,7 +110,7 @@ class APIDataFetcherService
             $totalRecords = count($response);
 
             foreach ($response as $row) {
-                InvoiceTrack::saveInvoiceTrackData($row);
+                AmazonSpReportFlatfilevatinvoicedatavidr::saveData($row);
             }
 
             ResponseHandler::success('Dati delle fatture recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
@@ -124,6 +128,7 @@ class APIDataFetcherService
      */
     public function fetchAndStoreFlatfileVatData()
     {
+        ini_set('memory_limit', '-1');
         ResponseHandler::info('Recupero dati Flatfile VAT Invoice', [], 'sellouter-info');
 
         try {
@@ -131,7 +136,7 @@ class APIDataFetcherService
             $totalRecords = count($response);
 
             foreach ($response as $row) {
-                FlatfileVatInvoiceData::saveInvoiceData($row);
+                AmazonSpReportAmazonvatcalculation::saveData($row);
             }
 
             ResponseHandler::success('Dati Flatfile VAT Invoice recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
@@ -149,14 +154,15 @@ class APIDataFetcherService
      */
     public function fetchAndStoreCollectionData()
     {
+        ini_set('memory_limit', '-1');
         ResponseHandler::info('Recupero dati delle collections', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callCollectionsDataApi();
             $totalRecords = count($response);
-
+            ResponseHandler::info('Elaborazione dei dati delle collections', ['response' => $response], 'sellouter-info');
             foreach ($response as $row) {
-                DataCollection::saveCollectionData($row);
+                AmazonSpReportFlatfilev2settlement::saveData($row);
             }
 
             ResponseHandler::success('Dati delle collections recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\File;
 
 Schedule::call(function () {
     dispatch(new DownloadFlatfileVATInvoiceDataJob());
-})->dailyAt("14:48");
+})->dailyAt("12:40");
 
 Schedule::call(function () {
     dispatch(new DownloadDataCalculationComputedJob());
@@ -24,16 +24,16 @@ Schedule::call(function () {
 })->dailyAt("10:05");
 
 // Task per eliminare i log più vecchi di 90 giorni ogni 90 giorni
-Schedule::call(function () {
-    $logPath = storage_path('logs');
+// Schedule::call(function () {
+//     $logPath = storage_path('./logs');
 
-    if (File::exists($logPath)) {
-        $files = File::files($logPath);
+//     if (File::exists($logPath)) {
+//         $files = File::files($logPath);
 
-        foreach ($files as $file) {
-            if (now()->diffInDays($file->getMTime()) >= 90) {
-                File::delete($file);
-            }
-        }
-    }
-})->dailyAt("10:06");
+//         foreach ($files as $file) {
+//             if (now()->diffInDays($file->getMTime()) >= 90) {
+//                 File::delete($file);
+//             }
+//         }
+//     }
+// })->dailyAt("10:06");

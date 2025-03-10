@@ -15,7 +15,7 @@ class SellerInventoryItem extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'date',
+        'report_date',
         'fnsku',
         'asin',
         'msku',

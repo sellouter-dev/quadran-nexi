@@ -30,9 +30,9 @@ class FileEncryptionService
         try {
             $this->sftpHost = env('SFTP_HOST');
             $this->sftpUsername = env('SFTP_USERNAME');
-            $this->publicKeyPath = storage_path('app/keys/sap@nexi.it.key');
+            $this->publicKeyPath = storage_path('./app/keys/sap@nexi.it.key');
 
-            putenv("GNUPGHOME=" . storage_path('app/keys'));
+            putenv("GNUPGHOME=" . storage_path('./app/keys'));
 
             if (!class_exists('gnupg')) {
                 ResponseHandler::error(
@@ -69,7 +69,11 @@ class FileEncryptionService
             ResponseHandler::info('Importazione della chiave pubblica', ['percorso' => $this->publicKeyPath], 'muvi-info');
 
             if (!file_exists($this->publicKeyPath)) {
-                ResponseHandler::warning("File della chiave pubblica non trovato in {$this->publicKeyPath}. La crittografia verrà saltata.", [], 'muvi-warning');
+                ResponseHandler::error(
+                    "File della chiave pubblica non trovato in {$this->publicKeyPath}. La crittografia verrà saltata.",
+                    [],
+                    'muvi-error'
+                );
                 $this->publicKeyFingerprint = null;
                 return;
             }
@@ -77,7 +81,11 @@ class FileEncryptionService
 
             $publicKey = file_get_contents($this->publicKeyPath);
             if ($publicKey === false) {
-                ResponseHandler::warning("Impossibile leggere il file della chiave pubblica in {$this->publicKeyPath}. La crittografia verrà saltata.", [], 'muvi-warning');
+                ResponseHandler::error(
+                    "Impossibile leggere il file della chiave pubblica in {$this->publicKeyPath}. La crittografia verrà saltata.",
+                    [],
+                    'muvi-error'
+                );
                 $this->publicKeyFingerprint = null;
                 return;
             }
@@ -140,8 +148,6 @@ class FileEncryptionService
             }
 
             ResponseHandler::success('File crittografato con successo', [], 'muvi-success');
-
-            ResponseHandler::info('Processo di crittografia del file completato', [], 'muvi-info');
             return $encrypted;
         } catch (Exception $e) {
             ResponseHandler::error(
@@ -175,7 +181,7 @@ class FileEncryptionService
             $sftp = new SFTP($this->sftpHost);
 
 
-            $privateKeyPath = storage_path('app/keys/ftps');
+            $privateKeyPath = storage_path('./app/keys/ftps');
             $privateKey = file_get_contents($privateKeyPath);
 
             if ($privateKey === false) {
@@ -210,7 +216,6 @@ class FileEncryptionService
                 'muvi-success'
             );
 
-            ResponseHandler::info('Processo di caricamento del file completato', ['percorso_remoto' => $remoteFilePath], 'muvi-info');
             return true;
         } catch (Exception $e) {
             ResponseHandler::error(
@@ -271,8 +276,6 @@ class FileEncryptionService
                 ['percorso_file' => $filePath],
                 'muvi-success'
             );
-
-            ResponseHandler::info('Processo di salvataggio del file completato', ['percorso_file' => $filePath], 'muvi-info');
 
             return response()->json([
                 'messaggio' => 'File e semaphore caricati con successo.'

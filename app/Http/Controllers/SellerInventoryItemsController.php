@@ -47,7 +47,7 @@ class SellerInventoryItemsController extends Controller
             $response = $client->get($jwksUrl);
             $jwks = json_decode($response->getBody(), true);
             $publicKeys = JWK::parseKeySet($jwks);
-            ResponseHandler::info("Chiavi pubbliche recuperate correttamente dal JWKS", [], 'inventory-info');
+            ResponseHandler::success("Chiavi pubbliche recuperate correttamente dal JWKS", [], 'inventory-success');
             return $publicKeys;
         } catch (\Exception $e) {
             ResponseHandler::error("Errore nel recupero delle chiavi pubbliche dal JWKS", [

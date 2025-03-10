@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\InvoiceTrack;
-use App\Models\DataCollection;
-use App\Models\FlatfileVatInvoiceData;
-use App\Services\FileEncryptionService;
-use App\Services\ResponseHandler;
 use Exception;
-use Carbon\Carbon; // Importiamo Carbon per gestire le date
+use App\Services\ResponseHandler;
+use App\Services\FileEncryptionService;
+use App\Models\AmazonSpReportFlatfilev2settlement;
+use App\Models\AmazonSpReportFlatfilevatinvoicedatavidr;
+use Carbon\Carbon;
+use CommerceGuys\Addressing\Subdivision\SubdivisionRepository;
 
 /**
  * Class CsvDataGeneratorService
@@ -49,8 +49,63 @@ class CsvDataGeneratorService
 
         try {
             // Filtra i record di oggi
-            $data = InvoiceTrack::whereDate('created_at', Carbon::today())->get()->toArray();
-            $filePath = storage_path('app/temp/InvoiceTrack_' . Carbon::today()->format('dmY') . '.csv');
+            $data = [];
+
+            // Log info prima del ciclo: inizio elaborazione record
+            ResponseHandler::info('downloadDataCalculationComputed - inizio elaborazione record', [], 'csv-controller-info');
+
+            // Recupera tutti i record del mese corrente, ordinati per requesttime
+            $results = AmazonSpReportFlatfilevatinvoicedatavidr::whereBetween('requesttime', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth()
+            ])
+                ->orderBy('shipment_date', 'asc')
+                ->get();
+
+            foreach ($results as $row) {
+                $importoConIva = $row->gift_promo_vat_incl_amount +
+                    $row->item_vat_incl_amount +
+                    $row->item_promo_vat_incl_amount +
+                    $row->shipping_promo_vat_incl_amount +
+                    $row->shipping_vat_incl_amount;
+
+                $importoSenzaIva = $row->gift_promo_vat_excl_amount +
+                    $row->item_vat_excl_amount +
+                    $row->item_promo_vat_excl_amount +
+                    $row->shipping_promo_vat_excl_amount +
+                    $row->shipping_promo_vat_excl_amount;
+
+                $importoIva = $row->gift_wrap_vat_amount +
+                    $row->item_vat_amount +
+                    $row->item_promo_vat_amount +
+                    $row->shipping_vat_amount +
+                    $row->shipping_promo_vat_amount;
+
+                $tipoRegistrazione = (empty($row->buyer_tax_registration_type))
+                    ? 'Corrispettivo'
+                    : $row->buyer_tax_registration_type;
+
+                $shipmentDate = Carbon::parse($row->tax_calculation_date)
+                    ->timezone('Europe/Rome')
+                    ->format('Y-m-d');
+
+                $data[] = [
+                    'document_date'              => $shipmentDate,
+                    'registration_date'          => '',
+                    'document_number'            => $row->original_vat_invoice_number,
+                    'document_type'              => $row->transaction_type,
+                    'currency'                   => $row->currency,
+                    'gross_amount'               => $importoConIva,
+                    'net_amount'                 => $importoSenzaIva,
+                    'vat_amount'                 => $importoIva,
+                    'split_payment'              => '',
+                    'vat_code'                   => round($row->item_vat_rate, 2),
+                    'unique_code_rif3'           => $row->order_id,
+                    'buyer_tax_registration_type' => ($tipoRegistrazione == "BusinessReg" ? "VAT" : $tipoRegistrazione),
+                    'buyer_vat_number'           => $row->buyer_vat_number,
+                ];
+            }
+            $filePath = storage_path('./app/temp/InvoiceTrack_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
             ResponseHandler::success('CSV per InvoiceTrack generato con successo', ['file' => 'InvoiceTrack.csv'], 'csv-success');
             return $result;
@@ -73,8 +128,56 @@ class CsvDataGeneratorService
 
         try {
             // Filtra i record di oggi
-            $data = FlatfileVatInvoiceData::whereDate('created_at', Carbon::today())->get()->toArray();
-            $filePath = storage_path('app/temp/Flatfilevatinvoicedata_' . Carbon::today()->format('dmY') . '.csv');
+            $data = [];
+            $subdivisionRepository = new SubdivisionRepository();
+            $uniqueCombinations = [];
+
+            // Log info prima del ciclo: inizio elaborazione record
+            ResponseHandler::info('downloadDataOfFlatfilevatinvoicedata - inizio elaborazione record', [], 'csv-controller-info');
+
+            // Filtra i record del mese corrente in base al campo shipment_date
+            $results = AmazonSpReportFlatfilevatinvoicedatavidr::whereNotNull('buyer_tax_registration_type')
+                ->whereIn('buyer_tax_registration_type', ['CitizenId', 'VAT'])
+                ->whereBetween('requesttime', [
+                    Carbon::now()->startOfMonth(),
+                    Carbon::now()->endOfMonth()
+                ]);
+
+            // Recupera tutti i record filtrati
+            $dataElement = $results->get();
+
+            foreach ($dataElement as $row) {
+                $uniqueKey = $row->order_id . '|' . $row->shipment_date;
+
+                if (! in_array($uniqueKey, $uniqueCombinations)) {
+                    $denominazioneDelCliente = $row->buyer_tax_registration_type === 'VAT'
+                        ? (empty($row->buyer_company_name) ? $row->buyer_name : $row->buyer_company_name)
+                        : $row->buyer_name;
+
+                    $provinciaResidenza = $row->bill_state;
+                    $subdivision = $subdivisionRepository->getAll(['IT']);
+                    foreach ($subdivision as $sub) {
+                        if (strtolower($sub->getName()) == strtolower($row->bill_state)) {
+                            $provinciaResidenza = $sub->getCode();
+                            break;
+                        }
+                    }
+
+                    $data[] = [
+                        'buyer_name'                  => $denominazioneDelCliente,
+                        'buyer_address'               => $row->bill_address_1,
+                        'buyer_postal_code'           => $row->bill_postal_code,
+                        'buyer_city'                  => $row->bill_city,
+                        'buyer_country'               => $row->bill_country,
+                        'buyer_province_code'         => $provinciaResidenza,
+                        'buyer_tax_registration_type' => $row->buyer_tax_registration_type,
+                        'buyer_vat_number'            => $row->buyer_vat_number,
+                    ];
+
+                    $uniqueCombinations[] = $uniqueKey;
+                }
+            }
+            $filePath = storage_path('./app/temp/Flatfilevatinvoicedata_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
 
             ResponseHandler::success('CSV per FlatfileVatInvoiceData generato con successo', ['file' => 'Flatfilevatinvoicedata.csv'], 'csv-success');
@@ -98,8 +201,54 @@ class CsvDataGeneratorService
 
         try {
             // Filtra i record di oggi
-            $data = DataCollection::whereDate('created_at', Carbon::today())->get()->toArray();
-            $filePath = storage_path('app/temp/FlatFileSettlement_' . Carbon::today()->format('dmY') . '.csv');
+            $query = AmazonSpReportFlatfilev2settlement::select(
+                'amazon_sp_report_flatfilev2settlement.deposit_date',
+                'amazon_sp_report_flatfilev2settlement.transaction_type',
+                'amazon_sp_report_flatfilev2settlement.amount_description',
+                'amazon_sp_report_flatfilev2settlement.currency',
+                'amazon_sp_report_flatfilev2settlement.amount',
+                'amazon_sp_report_flatfilev2settlement.order_id',
+                'amazon_sp_report_amazonvatcalculation.shipment_date',
+                'amazon_sp_report_amazonvatcalculation.vat_invoice_number',
+                'amazon_sp_report_amazonvatcalculation.buyer_tax_registration_type',
+                'amazon_sp_report_amazonvatcalculation.buyer_tax_registration'
+            )
+                ->whereNotNull('amazon_sp_report_flatfilev2settlement.order_id')
+                ->whereBetween('amazon_sp_report_flatfilev2settlement.requesttime', [
+                    Carbon::now()->startOfMonth(),
+                    Carbon::now()->endOfMonth()
+                ])
+                ->orderBy('amazon_sp_report_flatfilev2settlement.deposit_date', 'DESC')
+                ->rightJoin(
+                    'amazon_sp_report_amazonvatcalculation',
+                    'amazon_sp_report_flatfilev2settlement.order_id',
+                    '=',
+                    'amazon_sp_report_amazonvatcalculation.order_id'
+                );
+
+            $dataElement = $query->get();
+
+            foreach ($dataElement as $row) {
+                $shipmentDate = Carbon::parse($row->shipment_date ?? '')
+                    ->timezone('Europe/Rome')
+                    ->format('Y-m-d');
+
+                $data[] = [
+                    'deposit_date'              => $row->deposit_date,
+                    'document_date'             => $shipmentDate,
+                    'registration_date'         => '',
+                    'document_number'           => $row->vat_invoice_number ?? '',
+                    'document_type'             => $row->transaction_type,
+                    'transaction_type'          => $row->amount_description,
+                    'currency'                  => $row->currency,
+                    'amount'                    => round($row->amount, 2),
+                    'unique_code_rif3'          => $row->order_id,
+                    'buyer_tax_registration_type' => $row->buyer_tax_registration_type ?? '',
+                    'buyer_vat_number'          => $row->buyer_tax_registration ?? '',
+                ];
+            }
+
+            $filePath = storage_path('./app/temp/FlatFileSettlement_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
 
             ResponseHandler::success('CSV per DataCollection generato con successo', ['file' => 'FlatFileSettlement.csv'], 'csv-success');
