@@ -63,7 +63,7 @@ class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
                 'sellouter-info'
             );
 
-            $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
+            $this->apiDataFetcherService->fetchAndStoreInvoiceData();
             $this->csvDataGeneratorService->generateFlatfileVatCSV();
 
             ResponseHandler::success(

@@ -64,8 +64,8 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
                 'sellouter-info'
             );
 
-            $this->apiDataFetcherService->fetchAndStoreInvoiceData();
             $this->csvDataGeneratorService->generateInvoiceCSV();
+
 
             // Step 2: Completamento del job con successo
             ResponseHandler::success(

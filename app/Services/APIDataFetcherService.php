@@ -36,6 +36,7 @@ class APIDataFetcherService
     public function fetchAndSaveDataSellerInventoryItemsApi()
     {
         ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '0');
         // Log di inizio processo
         ResponseHandler::info('Avvio del processo di salvataggio per Seller Inventory Items API', [], 'sellouter-info');
 
@@ -101,11 +102,13 @@ class APIDataFetcherService
     public function fetchAndStoreInvoiceData()
     {
         ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '0');
         ResponseHandler::info('Recupero dati per il calcolo dell\'IVA', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callVatCalculationApi();
             $totalRecords = count($response);
+
             foreach ($response as $row) {
                 AmazonSpReportFlatfilevatinvoicedatavidr::saveData($row);
             }
@@ -126,12 +129,13 @@ class APIDataFetcherService
     public function fetchAndStoreFlatfileVatData()
     {
         ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '0');
         ResponseHandler::info('Recupero dati Flatfile VAT Invoice', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callFlatfileVatInvoiceDataApi();
             $totalRecords = count($response);
-            ResponseHandler::info('Elaborazione dei dati Flatfile VAT Invoice', ['response' => $response], 'sellouter-info');
+
             foreach ($response as $row) {
                 AmazonSpReportAmazonvatcalculation::saveData($row);
             }
@@ -152,12 +156,13 @@ class APIDataFetcherService
     public function fetchAndStoreCollectionData()
     {
         ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '0');
         ResponseHandler::info('Recupero dati delle collections', [], 'sellouter-info');
 
         try {
             $response = $this->dataGenerator->callCollectionsDataApi();
             $totalRecords = count($response);
-            ResponseHandler::info('Elaborazione dei dati delle collections', ['response' => $response], 'sellouter-info');
+
             foreach ($response as $row) {
                 AmazonSpReportFlatfilev2settlement::saveData($row);
             }

@@ -63,7 +63,6 @@ class DownloadDataCalculationComputedCommand extends Command
             $this->info('Starting calculation data download...');
             ResponseHandler::info('Starting data calculation download', [], 'info_log');
 
-            $this->apiDataFetcherService->fetchAndStoreInvoiceData();
             $this->csvDataGeneratorService->generateInvoiceCSV();
 
             // Completamento con successo

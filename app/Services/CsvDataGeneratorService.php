@@ -132,10 +132,8 @@ class CsvDataGeneratorService
             $subdivisionRepository = new SubdivisionRepository();
             $uniqueCombinations = [];
 
-            // Log info prima del ciclo: inizio elaborazione record
             ResponseHandler::info('downloadDataOfFlatfilevatinvoicedata - inizio elaborazione record', [], 'csv-controller-info');
 
-            // Filtra i record del mese corrente in base al campo shipment_date
             $results = AmazonSpReportFlatfilevatinvoicedatavidr::whereNotNull('buyer_tax_registration_type')
                 ->whereIn('buyer_tax_registration_type', ['CitizenId', 'VAT'])
                 ->whereBetween('requesttime', [
@@ -303,7 +301,7 @@ class CsvDataGeneratorService
         } finally {
             // Rimuove il file temporaneo se esiste
             if (file_exists($filePath)) {
-                unlink($filePath);
+                // unlink($filePath);
             }
         }
     }

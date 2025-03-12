@@ -63,7 +63,7 @@ class DownloadFlatfileVatInvoiceDataCommand extends Command
             $this->info('Starting flatfile VAT invoice data download...');
             ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'info_log');
 
-            $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
+            $this->apiDataFetcherService->fetchAndStoreInvoiceData();
             $this->csvDataGeneratorService->generateFlatfileVatCSV();
 
             // Completamento con successo
