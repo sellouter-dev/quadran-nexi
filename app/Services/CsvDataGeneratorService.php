@@ -198,6 +198,7 @@ class CsvDataGeneratorService
         ResponseHandler::info('Avvio della generazione del CSV per DataCollection', [], 'csv-info');
 
         try {
+            $data = [];
             // Filtra i record di oggi
             $query = AmazonSpReportFlatfilev2settlement::select(
                 'amazon_sp_report_flatfilev2settlement.deposit_date',
