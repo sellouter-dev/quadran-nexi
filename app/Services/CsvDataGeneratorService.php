@@ -105,7 +105,7 @@ class CsvDataGeneratorService
                     'buyer_vat_number'           => $row->buyer_vat_number,
                 ];
             }
-            $filePath = storage_path('./app/temp/InvoiceTrack_' . Carbon::today()->format('dmY') . '.csv');
+            $filePath = storage_path('/app/temp/InvoiceTrack_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
             ResponseHandler::success('CSV per InvoiceTrack generato con successo', ['file' => 'InvoiceTrack.csv'], 'csv-success');
             return $result;
@@ -175,7 +175,7 @@ class CsvDataGeneratorService
                     $uniqueCombinations[] = $uniqueKey;
                 }
             }
-            $filePath = storage_path('./app/temp/Flatfilevatinvoicedata_' . Carbon::today()->format('dmY') . '.csv');
+            $filePath = storage_path('/app/temp/Flatfilevatinvoicedata_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
 
             ResponseHandler::success('CSV per FlatfileVatInvoiceData generato con successo', ['file' => 'Flatfilevatinvoicedata.csv'], 'csv-success');
@@ -247,7 +247,7 @@ class CsvDataGeneratorService
                 ];
             }
 
-            $filePath = storage_path('./app/temp/FlatFileSettlement_' . Carbon::today()->format('dmY') . '.csv');
+            $filePath = storage_path('/app/temp/FlatFileSettlement_' . Carbon::today()->format('dmY') . '.csv');
             $result = $this->streamCSV($data, $filePath);
 
             ResponseHandler::success('CSV per DataCollection generato con successo', ['file' => 'FlatFileSettlement.csv'], 'csv-success');
