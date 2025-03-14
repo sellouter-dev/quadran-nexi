@@ -119,12 +119,65 @@ I comandi devono essere eseguiti nell'ordine riportato, per garantire una corret
 
 > php artisan app:download-data-calculation-computed-command
 
+## 📌 Comando `app:download-collections-data-command`
+
+Scarica i dati della collezione AmazonSpReportFlatfilev2settlement e genera il file CSV `FlatFileSettlement_timestamp.csv`.
+
+**Parametri disponibili:**
+
+| Valore | Descrizione                               |
+| ------ | ----------------------------------------- |
+| `0`    | (Default) Scarica i dati e genera il CSV  |
+| `1`    | Genera solo il CSV senza scaricare i dati |
+| `2`    | Scarica solo i dati senza generare il CSV |
+
+**Esempi:**
+
+```sh
+# Scarica i dati e genera il CSV (default)
+php artisan app:download-collections-data-command
+
+# Genera solo il CSV
+php artisan app:download-collections-data-command 1
+
+# Scarica solo i dati
+php artisan app:download-collections-data-command 2
+```
+
+---
+
+## 📌 Comando `app:download-flatfile-vat-invoice-data-command`
+
+Scarica i dati della collezione AmazonSpReportFlatfilevatinvoicedatavidr e genera il file CSV `Flatfilevatinvoicedata_timestamp.csv`.
+
+**Parametri disponibili:**
+
+| Valore | Descrizione                               |
+| ------ | ----------------------------------------- |
+| `0`    | (Default) Scarica i dati e genera il CSV  |
+| `1`    | Genera solo il CSV senza scaricare i dati |
+| `2`    | Scarica solo i dati senza generare il CSV |
+
+**Esempi:**
+
+```sh
+# Scarica i dati e genera il CSV (default)
+php artisan app:download-flatfile-vat-invoice-data-command
+
+# Genera solo il CSV
+php artisan app:download-flatfile-vat-invoice-data-command 1
+
+# Scarica solo i dati
+php artisan app:download-flatfile-vat-invoice-data-command 2
+```
+
+---
+
 ## API INVENTORY
 
 > php artisan app:save-seller-inventory-items-command
 
-
 ## Tabelle
+
 amazon_sp_report_amazonvattransactions -> mensile
 AMAZON_SP_REPORT_AMAZONVATCALCULATION -> giornaliera
-
