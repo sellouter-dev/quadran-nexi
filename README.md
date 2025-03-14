@@ -122,3 +122,9 @@ I comandi devono essere eseguiti nell'ordine riportato, per garantire una corret
 ## API INVENTORY
 
 > php artisan app:save-seller-inventory-items-command
+
+
+## Tabelle
+amazon_sp_report_amazonvattransactions -> mensile
+AMAZON_SP_REPORT_AMAZONVATCALCULATION -> giornaliera
+

@@ -164,6 +164,13 @@ class AmazonSpReportAmazonvatcalculation extends Model
         ];
 
         // Inserisce o aggiorna il record
-        self::updateOrCreate(['order_id' => $mappedData['order_id']], $mappedData);
+        self::updateOrCreate(
+            [
+                "transaction_id" => $mappedData["transaction_id"],
+                "order_id" => $mappedData["order_id"],
+                "asin" => $mappedData["asin"],
+            ],
+            $mappedData
+        );
     }
 }

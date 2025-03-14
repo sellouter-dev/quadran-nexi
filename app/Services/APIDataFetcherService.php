@@ -162,7 +162,6 @@ class APIDataFetcherService
         try {
             $response = $this->dataGenerator->callCollectionsDataApi();
             $totalRecords = count($response);
-
             foreach ($response as $row) {
                 AmazonSpReportFlatfilev2settlement::saveData($row);
             }

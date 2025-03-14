@@ -214,7 +214,14 @@ class AmazonSpReportFlatfilevatinvoicedatavidr extends Model
             'updated_at' => Carbon::now(),
         ];
 
-        // Inserisce o aggiorna il record
-        self::updateOrCreate(['order_id' => $mappedData['order_id']], $mappedData);
+        self::updateOrCreate(
+            [
+                "transaction_id" => $mappedData["transaction_id"],
+                "order_id" => $mappedData["order_id"],
+                "asin" => $mappedData["asin"],
+                "order_item_id" => $mappedData["order_item_id"],
+            ],
+            $mappedData
+        );
     }
 }

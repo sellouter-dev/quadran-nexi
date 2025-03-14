@@ -14,7 +14,7 @@ class DownloadFlatfileVatInvoiceDataCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:download-flatfile-vat-invoice-data-command';
+    protected $signature = 'app:download-flatfile-vat-invoice-data-command {mode=0 : 0 (fetch+CSV), 1 (CSV only), 2 (fetch only)}';
 
     /**
      * La descrizione del comando Artisan.
@@ -56,23 +56,28 @@ class DownloadFlatfileVatInvoiceDataCommand extends Command
      */
     public function handle()
     {
-        ResponseHandler::info('Command data:download-flatfile-vat started', [], 'info_log');
+        $mode = (int)$this->argument('mode');
+
+        ResponseHandler::info('Command data:download-flatfile-vat started with mode ' . $mode, [], 'info_log');
 
         try {
-            // Avvio del download dei dati
-            $this->info('Starting flatfile VAT invoice data download...');
-            ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'info_log');
+            if ($mode === 0 || $mode === 2) {
+                $this->info('Starting flatfile VAT invoice data download...');
+                ResponseHandler::info('Starting flatfile VAT invoice data download', [], 'info_log');
+                $this->apiDataFetcherService->fetchAndStoreInvoiceData();
+            }
 
-            $this->apiDataFetcherService->fetchAndStoreInvoiceData();
-            $this->csvDataGeneratorService->generateFlatfileVatCSV();
+            if ($mode === 0 || $mode === 1) {
+                $this->info('Generating flatfile VAT CSV data...');
+                ResponseHandler::info('Generating flatfile VAT CSV data', [], 'info_log');
+                $this->csvDataGeneratorService->generateFlatfileVatCSV();
+            }
 
-            // Completamento con successo
-            $this->info('Flatfile VAT invoice data download completed successfully.');
+            $this->info('Operation completed successfully.');
             ResponseHandler::success('Flatfile VAT invoice data download completed successfully', [], 'success_log');
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            // Log dell'errore con dettagli
             $this->error('Error occurred during flatfile VAT invoice data download.');
             ResponseHandler::error('Error executing data:download-flatfile-vat command', [
                 'error' => $e->getMessage(),

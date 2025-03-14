@@ -89,7 +89,14 @@ class AmazonSpReportFlatfilev2settlement extends Model
             'updated_at'                  => Carbon::now(),
         ];
 
-        // Inserisce o aggiorna il record con la nuova struttura
-        self::updateOrCreate(['order_id' => $mappedData['order_id']], $mappedData);
+
+        self::updateOrCreate(
+            [
+                "order_id" => $mappedData["order_id"],
+                "amount_description" => $mappedData["amount_description"],
+                "amount" => $mappedData["amount"],
+            ],
+            $mappedData
+        );
     }
 }

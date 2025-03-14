@@ -14,7 +14,7 @@ class DownloadCollectionsDataCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'app:download-collections-data-command';
+    protected $signature = 'app:download-collections-data-command {mode=0 : 0 (fetch+CSV), 1 (CSV only), 2 (fetch only)}';
 
     /**
      * Il servizio CsvDataGeneratorService per la gestione dei dati.
@@ -50,24 +50,29 @@ class DownloadCollectionsDataCommand extends Command
      */
     public function handle()
     {
-        ResponseHandler::info('Command collections:download started', [], 'info_log');
+        $mode = (int)$this->argument('mode');
+
+        ResponseHandler::info('Command collections:download started with mode ' . $mode, [], 'info_log');
 
         try {
-            // Avvio del download dei dati
-            $this->info('Starting data download from API...');
-            ResponseHandler::info('Starting data download from API', [], 'info_log');
+            if ($mode === 0 || $mode === 2) {
+                $this->info('Starting data download from API...');
+                ResponseHandler::info('Starting data download from API', [], 'info_log');
+                $this->apiDataFetcherService->fetchAndStoreCollectionData();
+            }
 
-            $this->apiDataFetcherService->fetchAndStoreCollectionData();
-            $this->csvDataGeneratorService->generateCollectionCSV();
+            if ($mode === 0 || $mode === 1) {
+                $this->info('Generating CSV data...');
+                ResponseHandler::info('Generating CSV data', [], 'info_log');
+                $this->csvDataGeneratorService->generateCollectionCSV();
+            }
 
-            // Completamento con successo
-            $this->info('Data download completed successfully.');
-            ResponseHandler::success('Data download completed successfully', [], 'success_log');
+            $this->info('Operation completed successfully.');
+            ResponseHandler::success('Operation completed successfully', [], 'success_log');
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            // Log dell'errore con dettagli
-            $this->error('Error occurred during data download.');
+            $this->error('Error occurred during command execution.');
             ResponseHandler::error('Error executing collections:download command', [
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),

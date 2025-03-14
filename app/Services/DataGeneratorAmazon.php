@@ -10,6 +10,7 @@ use Exception;
 class DataGeneratorAmazon
 {
     private $API_URL;
+    private $API_URL_QUADRAN;
     private $client;
     /**
      * Access token ottenuto dal token endpoint.
@@ -26,6 +27,7 @@ class DataGeneratorAmazon
     public function __construct()
     {
         $this->API_URL = env("API_URL");
+        $this->API_URL_QUADRAN = env("API_URL_QUADRAN");
         $this->client = new Client([
             'timeout'         => 0,
             'connect_timeout' => 0,
@@ -98,23 +100,37 @@ class DataGeneratorAmazon
      */
     public function makeApiCall(string $endpoint)
     {
-        $apiUrl = $this->API_URL . $endpoint;
-        $accessToken = $this->getAccessToken();
-
-        if (!$accessToken) {
-            ResponseHandler::error("Token di accesso non disponibile", [], 'sellouter-error');
-            return [];
-        }
-
-        ResponseHandler::info("Chiamata API", ['url' => $apiUrl, 'accessToken' => $accessToken], 'sellouter-info');
 
         try {
-            $response = $this->client->get($apiUrl, [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $accessToken,
-                ],
-                'verify' => false,
-            ]);
+            if (!env("CALL_DIRECTLY_QUADRAN_API")) {
+                $apiUrl = $this->API_URL . $endpoint;
+                $accessToken = $this->getAccessToken();
+                if (!$accessToken) {
+                    ResponseHandler::error("Token di accesso non disponibile", [], 'sellouter-error');
+                    return [];
+                }
+
+                ResponseHandler::info("Chiamata API", ['url' => $apiUrl, 'accessToken' => $accessToken], 'sellouter-info');
+
+                $response = $this->client->get($apiUrl, [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $accessToken,
+                    ],
+                    'verify' => false,
+                ]);
+            } else {
+                $apiUrl =  $this->API_URL_QUADRAN . $endpoint;
+                ResponseHandler::info("Chiamata API", ['url' => $apiUrl], 'sellouter-info');
+
+                $response = $this->client->get($apiUrl, [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer dJQn4>501<#R'
+                    ],
+                    'verify' => false,
+                ]);
+            }
+
             $body = $response->getBody()->getContents();
             ResponseHandler::success("Chiamata API eseguita con successo", ['url' => $apiUrl, 'body' => $body], 'sellouter-success');
             return json_decode($body, true);
