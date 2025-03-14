@@ -30,9 +30,9 @@ class FileEncryptionService
         try {
             $this->sftpHost = env('SFTP_HOST');
             $this->sftpUsername = env('SFTP_USERNAME');
-            $this->publicKeyPath = storage_path('./app/keys/sap@nexi.it.key');
+            $this->publicKeyPath = storage_path('/app/keys/sap@nexi.it.key');
 
-            putenv("GNUPGHOME=" . storage_path('./app/keys'));
+            putenv("GNUPGHOME=" . storage_path('/app/keys'));
 
             if (!class_exists('gnupg')) {
                 ResponseHandler::error(
@@ -181,7 +181,7 @@ class FileEncryptionService
             $sftp = new SFTP($this->sftpHost);
 
 
-            $privateKeyPath = storage_path('./app/keys/ftps');
+            $privateKeyPath = storage_path('/app/keys/ftps');
             $privateKey = file_get_contents($privateKeyPath);
 
             if ($privateKey === false) {
