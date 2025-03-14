@@ -30,7 +30,7 @@ class FileEncryptionService
         try {
             $this->sftpHost = env('SFTP_HOST');
             $this->sftpUsername = env('SFTP_USERNAME');
-            $this->publicKeyPath = storage_path('/app/keys/sap@nexi.it.key');
+            $this->publicKeyPath = __DIR__ . '/../../storage/app/keys/sap@nexi.it.key';
 
             putenv("GNUPGHOME=" . storage_path('/app/keys'));
 
