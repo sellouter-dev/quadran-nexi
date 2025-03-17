@@ -12,6 +12,7 @@ use Exception;
 class FileEncryptionService
 {
     protected $sftpHost;
+    protected $sftpPort;
     protected $sftpUsername;
     protected $publicKeyPath;
     protected $gnupg;
@@ -29,6 +30,7 @@ class FileEncryptionService
     {
         try {
             $this->sftpHost = env('SFTP_HOST');
+            $this->sftpPort = env('SFTP_PORT');
             $this->sftpUsername = env('SFTP_USERNAME');
             $this->publicKeyPath = __DIR__ . '/../../storage/app/keys/sap@nexi.it.key';
 
@@ -175,10 +177,11 @@ class FileEncryptionService
         try {
             ResponseHandler::info('Connessione al server SFTP utilizzando la chiave SSH', [
                 'host' => $this->sftpHost,
+                'port' => $this->sftpPort,
                 'username' => $this->sftpUsername,
             ], 'muvi-info');
 
-            $sftp = new SFTP($this->sftpHost);
+            $sftp = new SFTP($this->sftpHost, $this->sftpPort);
 
 
             $privateKeyPath = storage_path('/app/keys/ftps');
