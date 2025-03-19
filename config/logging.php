@@ -1,9 +1,6 @@
 <?php
 
-use Monolog\Handler\NullHandler;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\SyslogUdpHandler;
-use Monolog\Processor\PsrLogMessageProcessor;
+use App\Services\JsonFormatterEscape;
 
 return [
 
@@ -77,88 +74,32 @@ return [
             'level' => 'warning',
         ],
 
-        'muvi-error' => [
+        'muvi' => [
             'driver' => 'single',
-            'path' => storage_path('logs/muvi/muvi-error.log'),
-            'level' => 'error',
-        ],
-        'muvi-success' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/muvi/muvi-success.log'),
+            'path' => storage_path('logs/muvi.log'),
             'level' => 'debug',
-        ],
-        'muvi-info' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/muvi/muvi-info.log'),
-            'level' => 'info',
-        ],
-        'muvi-warning' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/muvi/muvi-warning.log'),
-            'level' => 'warning',
+            'formatter' => JsonFormatterEscape::class, // Log in JSON su una riga
         ],
 
-        'inventory-error' => [
+        'inventory' => [
             'driver' => 'single',
-            'path' => storage_path('logs/inventory/inventory-error.log'),
-            'level' => 'error',
-        ],
-        'inventory-success' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/inventory/inventory-success.log'),
+            'path' => storage_path('logs/inventory.log'),
             'level' => 'debug',
-        ],
-        'inventory-info' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/inventory/inventory-info.log'),
-            'level' => 'info',
-        ],
-        'inventory-warning' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/inventory/inventory-warning.log'),
-            'level' => 'warning',
+            'formatter' => JsonFormatterEscape::class,
         ],
 
-        'sellouter-error' => [
+        'sellouter' => [
             'driver' => 'single',
-            'path' => storage_path('logs/sellouter/sellouter-error.log'),
-            'level' => 'error',
-        ],
-        'sellouter-success' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/sellouter/sellouter-success.log'),
+            'path' => storage_path('logs/sellouter.log'),
             'level' => 'debug',
-        ],
-        'sellouter-info' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/sellouter/sellouter-info.log'),
-            'level' => 'info',
-        ],
-        'sellouter-warning' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/sellouter/sellouter-warning.log'),
-            'level' => 'warning',
+            'formatter' => JsonFormatterEscape::class,
         ],
 
-        'csv-error' => [
+        'csv' => [
             'driver' => 'single',
-            'path' => storage_path('logs/csv/csv-error.log'),
-            'level' => 'error',
-        ],
-        'csv-success' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/csv/csv-success.log'),
+            'path' => storage_path('logs/csv.log'),
             'level' => 'debug',
+            'formatter' => JsonFormatterEscape::class,
         ],
-        'csv-info' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/csv/csv-info.log'),
-            'level' => 'info',
-        ],
-        'csv-warning' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/csv/csv-warning.log'),
-            'level' => 'warning',
-        ]
     ],
 ];

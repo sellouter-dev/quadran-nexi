@@ -38,14 +38,14 @@ class APIDataFetcherService
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
         // Log di inizio processo
-        ResponseHandler::info('Avvio del processo di salvataggio per Seller Inventory Items API', [], 'sellouter-info');
+        ResponseHandler::info('Avvio del processo di salvataggio per Seller Inventory Items API', [], 'sellouter');
 
         try {
-            ResponseHandler::info('Chiamata all\'API di Seller Inventory Items', [], 'sellouter-info');
+            ResponseHandler::info('Chiamata all\'API di Seller Inventory Items', [], 'sellouter');
             $response = $this->dataGenerator->callSellerInventoryItemsApi();
 
             $totalItems = count($response);
-            ResponseHandler::info('Elaborazione degli inventory items', ['totale_item' => $totalItems], 'sellouter-info');
+            ResponseHandler::info('Elaborazione degli inventory items', ['totale_item' => $totalItems], 'sellouter');
 
             foreach ($response as $index => $row) {
                 SellerInventoryItem::create([
@@ -75,7 +75,7 @@ class APIDataFetcherService
 
             ResponseHandler::success('Seller inventory items salvati con successo', [
                 'totale_processati' => $totalItems
-            ], 'sellouter-success');
+            ], 'sellouter');
 
             return response()->json(['messaggio' => 'Dati di Seller Inventory Items salvati con successo'], 200);
         } catch (Exception $e) {
@@ -83,7 +83,7 @@ class APIDataFetcherService
                 'errore' => $e->getMessage(),
                 'file'   => $e->getFile(),
                 'linea'  => $e->getLine(),
-            ], 'sellouter-error');
+            ], 'sellouter');
 
             return response()->json([
                 'errore' => $e->getMessage(),
@@ -103,7 +103,7 @@ class APIDataFetcherService
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
-        ResponseHandler::info('Recupero dati per il calcolo dell\'IVA', [], 'sellouter-info');
+        ResponseHandler::info('Recupero dati per il calcolo dell\'IVA', [], 'sellouter');
 
         try {
             $response = $this->dataGenerator->callVatCalculationApi();
@@ -113,9 +113,9 @@ class APIDataFetcherService
                 AmazonSpReportFlatfilevatinvoicedatavidr::saveData($row);
             }
 
-            ResponseHandler::success('Dati delle fatture recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
+            ResponseHandler::success('Dati delle fatture recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter');
         } catch (Exception $e) {
-            ResponseHandler::error('Errore nel recupero dei dati delle fatture', ['errore' => $e->getMessage()], 'sellouter-error');
+            ResponseHandler::error('Errore nel recupero dei dati delle fatture', ['errore' => $e->getMessage()], 'sellouter');
         }
     }
 
@@ -130,7 +130,7 @@ class APIDataFetcherService
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
-        ResponseHandler::info('Recupero dati Flatfile VAT Invoice', [], 'sellouter-info');
+        ResponseHandler::info('Recupero dati Flatfile VAT Invoice', [], 'sellouter');
 
         try {
             $response = $this->dataGenerator->callFlatfileVatInvoiceDataApi();
@@ -140,9 +140,9 @@ class APIDataFetcherService
                 AmazonSpReportAmazonvatcalculation::saveData($row);
             }
 
-            ResponseHandler::success('Dati Flatfile VAT Invoice recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
+            ResponseHandler::success('Dati Flatfile VAT Invoice recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter');
         } catch (Exception $e) {
-            ResponseHandler::error('Errore nel recupero dei dati Flatfile VAT', ['errore' => $e->getMessage()], 'sellouter-error');
+            ResponseHandler::error('Errore nel recupero dei dati Flatfile VAT', ['errore' => $e->getMessage()], 'sellouter');
         }
     }
 
@@ -157,7 +157,7 @@ class APIDataFetcherService
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
-        ResponseHandler::info('Recupero dati delle collections', [], 'sellouter-info');
+        ResponseHandler::info('Recupero dati delle collections', [], 'sellouter');
 
         try {
             $response = $this->dataGenerator->callCollectionsDataApi();
@@ -166,9 +166,9 @@ class APIDataFetcherService
                 AmazonSpReportFlatfilev2settlement::saveData($row);
             }
 
-            ResponseHandler::success('Dati delle collections recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter-success');
+            ResponseHandler::success('Dati delle collections recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter');
         } catch (Exception $e) {
-            ResponseHandler::error('Errore nel recupero dei dati delle collections', ['errore' => $e->getMessage()], 'sellouter-error');
+            ResponseHandler::error('Errore nel recupero dei dati delle collections', ['errore' => $e->getMessage()], 'sellouter');
         }
     }
 }

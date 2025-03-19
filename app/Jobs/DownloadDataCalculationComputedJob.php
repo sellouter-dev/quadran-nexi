@@ -53,7 +53,7 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
                 'job_id' => $this->job->getJobId(),
                 'queue'  => $this->job->getQueue(),
             ],
-            'sellouter-info'
+            'sellouter'
         );
 
         try {
@@ -61,7 +61,7 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
             ResponseHandler::info(
                 'Avvio del download dei dati per il calcolo',
                 [],
-                'sellouter-info'
+                'sellouter'
             );
 
             $this->csvDataGeneratorService->generateInvoiceCSV();
@@ -73,7 +73,7 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
                 [
                     'job_id' => $this->job->getJobId(),
                 ],
-                'sellouter-success'
+                'sellouter'
             );
         } catch (\Exception $e) {
             // Step 3: Gestione dell'errore
@@ -85,7 +85,7 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
                     'linea'  => $e->getLine(),
                     'trace'  => $e->getTraceAsString(),
                 ],
-                'sellouter-error'
+                'sellouter'
             );
         }
     }

@@ -44,14 +44,14 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
                 'job_id' => $this->job->getJobId(),
                 'queue'  => $this->job->getQueue(),
             ],
-            'sellouter-info'
+            'sellouter'
         );
 
         try {
             ResponseHandler::info(
                 'Avvio del processo di salvataggio dei dati degli Seller Inventory Items',
                 [],
-                'sellouter-info'
+                'sellouter'
             );
 
             $this->apiDataFetcherService->fetchAndSaveDataSellerInventoryItemsApi();
@@ -61,7 +61,7 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
                 [
                     'job_id' => $this->job->getJobId(),
                 ],
-                'sellouter-success'
+                'sellouter'
             );
         } catch (\Exception $e) {
             ResponseHandler::error(
@@ -72,7 +72,7 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
                     'linea'  => $e->getLine(),
                     'trace'  => $e->getTraceAsString(),
                 ],
-                'sellouter-error'
+                'sellouter'
             );
         }
     }

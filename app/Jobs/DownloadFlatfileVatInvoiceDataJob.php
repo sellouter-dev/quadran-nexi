@@ -53,14 +53,14 @@ class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
                 'job_id' => $this->job->getJobId(),
                 'queue'  => $this->job->getQueue(),
             ],
-            'sellouter-info'
+            'sellouter'
         );
 
         try {
             ResponseHandler::info(
                 'Avvio del download dei dati Flatfile VAT Invoice',
                 [],
-                'sellouter-info'
+                'sellouter'
             );
 
             $this->apiDataFetcherService->fetchAndStoreInvoiceData();
@@ -71,7 +71,7 @@ class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
                 [
                     'job_id' => $this->job->getJobId(),
                 ],
-                'sellouter-success'
+                'sellouter'
             );
         } catch (\Exception $e) {
             ResponseHandler::error(
@@ -82,7 +82,7 @@ class DownloadFlatfileVatInvoiceDataJob implements ShouldQueue
                     'linea'  => $e->getLine(),
                     'trace'  => $e->getTraceAsString(),
                 ],
-                'sellouter-error'
+                'sellouter'
             );
         }
     }

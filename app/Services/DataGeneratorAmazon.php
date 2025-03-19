@@ -57,7 +57,7 @@ class DataGeneratorAmazon
             ResponseHandler::info("Richiesta token di accesso", [
                 'token_url' => $tokenUrl,
                 'client_id' => $clientId
-            ], 'sellouter-info');
+            ], 'sellouter');
 
             $response = $this->client->post($tokenUrl, [
                 'headers' => [
@@ -76,10 +76,10 @@ class DataGeneratorAmazon
 
             if (isset($data['access_token'])) {
                 $this->accessToken = $data['access_token'];
-                ResponseHandler::success("Token di accesso ottenuto con successo", ['access_token' => $this->accessToken], 'sellouter-success');
+                ResponseHandler::success("Token di accesso ottenuto con successo", ['access_token' => $this->accessToken], 'sellouter');
                 return $this->accessToken;
             } else {
-                ResponseHandler::error("Token di accesso non trovato nella risposta", ['response' => $data], 'sellouter-error');
+                ResponseHandler::error("Token di accesso non trovato nella risposta", ['response' => $data], 'sellouter');
                 return null;
             }
         } catch (Exception $e) {
@@ -87,7 +87,7 @@ class DataGeneratorAmazon
                 'errore' => $e->getMessage(),
                 'file'   => $e->getFile(),
                 'linea'  => $e->getLine(),
-            ], 'sellouter-error');
+            ], 'sellouter');
             return null;
         }
     }
@@ -106,11 +106,11 @@ class DataGeneratorAmazon
                 $apiUrl = $this->API_URL . $endpoint;
                 $accessToken = $this->getAccessToken();
                 if (!$accessToken) {
-                    ResponseHandler::error("Token di accesso non disponibile", [], 'sellouter-error');
+                    ResponseHandler::error("Token di accesso non disponibile", [], 'sellouter');
                     return [];
                 }
 
-                ResponseHandler::info("Chiamata API", ['url' => $apiUrl, 'accessToken' => $accessToken], 'sellouter-info');
+                ResponseHandler::info("Chiamata API", ['url' => $apiUrl, 'accessToken' => $accessToken], 'sellouter');
 
                 $response = $this->client->get($apiUrl, [
                     'headers' => [
@@ -120,7 +120,7 @@ class DataGeneratorAmazon
                 ]);
             } else {
                 $apiUrl =  $this->API_URL_QUADRAN . $endpoint;
-                ResponseHandler::info("Chiamata API", ['url' => $apiUrl], 'sellouter-info');
+                ResponseHandler::info("Chiamata API", ['url' => $apiUrl], 'sellouter');
 
                 $response = $this->client->get($apiUrl, [
                     'headers' => [
@@ -132,20 +132,20 @@ class DataGeneratorAmazon
             }
 
             $body = $response->getBody()->getContents();
-            ResponseHandler::success("Chiamata API eseguita con successo", ['url' => $apiUrl, 'body' => $body], 'sellouter-success');
+            ResponseHandler::success("Chiamata API eseguita con successo", ['url' => $apiUrl, 'body' => $body], 'sellouter');
             return json_decode($body, true);
         } catch (RequestException $e) {
             $response = $e->getResponse();
             ResponseHandler::error("RequestException API: " . $e->getMessage(), [
                 'response'    => $response ? (string)$response->getBody() : 'Nessuna risposta',
                 'status_code' => $response ? $response->getStatusCode() : 'null'
-            ], 'sellouter-error');
+            ], 'sellouter');
             return [];
         } catch (Exception $e) {
             ResponseHandler::error("Eccezione Generale API: " . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'linea' => $e->getLine()
-            ], 'sellouter-error');
+            ], 'sellouter');
             return [];
         }
     }
@@ -158,7 +158,7 @@ class DataGeneratorAmazon
     public function callVatCalculationApi()
     {
         try {
-            ResponseHandler::info("Chiamata API per il calcolo dell'IVA", [], 'sellouter-info');
+            ResponseHandler::info("Chiamata API per il calcolo dell'IVA", [], 'sellouter');
             $response = $this->makeApiCall('/vat-calculation');
             return $response['data'] ?? [];
         } catch (Exception $e) {
@@ -166,7 +166,7 @@ class DataGeneratorAmazon
                 'errore' => $e->getMessage(),
                 'file'   => $e->getFile(),
                 'linea'  => $e->getLine(),
-            ], 'sellouter-error');
+            ], 'sellouter');
             return [];
         }
     }
@@ -179,7 +179,7 @@ class DataGeneratorAmazon
     public function callFlatfileVatInvoiceDataApi()
     {
         try {
-            ResponseHandler::info("Chiamata API per Flatfile VAT Invoice Data", [], 'sellouter-info');
+            ResponseHandler::info("Chiamata API per Flatfile VAT Invoice Data", [], 'sellouter');
             $response = $this->makeApiCall('/flatfile-vat-invoice-data');
             return $response['data'] ?? [];
         } catch (Exception $e) {
@@ -187,7 +187,7 @@ class DataGeneratorAmazon
                 'errore' => $e->getMessage(),
                 'file'   => $e->getFile(),
                 'linea'  => $e->getLine(),
-            ], 'sellouter-error');
+            ], 'sellouter');
             return [];
         }
     }
@@ -200,7 +200,7 @@ class DataGeneratorAmazon
     public function callCollectionsDataApi()
     {
         try {
-            ResponseHandler::info("Chiamata API per Collections Data", [], 'sellouter-info');
+            ResponseHandler::info("Chiamata API per Collections Data", [], 'sellouter');
             $response = $this->makeApiCall('/collections-data');
             return $response['data'] ?? [];
         } catch (Exception $e) {
@@ -208,7 +208,7 @@ class DataGeneratorAmazon
                 'errore' => $e->getMessage(),
                 'file'   => $e->getFile(),
                 'linea'  => $e->getLine(),
-            ], 'sellouter-error');
+            ], 'sellouter');
             return [];
         }
     }
@@ -221,7 +221,7 @@ class DataGeneratorAmazon
     public function callSellerInventoryItemsApi()
     {
         try {
-            ResponseHandler::info("Chiamata API per Seller Inventory Items", [], 'sellouter-info');
+            ResponseHandler::info("Chiamata API per Seller Inventory Items", [], 'sellouter');
             $response = $this->makeApiCall('/seller-inventory-items');
             return $response['data'] ?? [];
         } catch (Exception $e) {
@@ -229,7 +229,7 @@ class DataGeneratorAmazon
                 'errore' => $e->getMessage(),
                 'file'   => $e->getFile(),
                 'linea'  => $e->getLine(),
-            ], 'sellouter-error');
+            ], 'sellouter');
             return [];
         }
     }

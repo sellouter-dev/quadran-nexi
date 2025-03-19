@@ -21,7 +21,7 @@ class ResponseHandler
 
         $logData = [
             'status' => $status->value,
-            'message' => $message,
+            'description' => $message,
             'data' => $data,
             'timestamp' => now()->toIso8601String()
         ];

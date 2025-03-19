@@ -53,12 +53,12 @@ class DownloadCollectionsDataJob implements ShouldQueue
                 'job_id' => $this->job->getJobId(),
                 'queue'  => $this->job->getQueue(),
             ],
-            'sellouter-info'
+            'sellouter'
         );
 
         try {
             // Step 1: Avvio del download dei dati dall'API
-            ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter-info');
+            ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter');
             $this->apiDataFetcherService->fetchAndStoreCollectionData();
             $this->csvDataGeneratorService->generateCollectionCSV();
             // Step 2: Completamento del job con successo
@@ -67,7 +67,7 @@ class DownloadCollectionsDataJob implements ShouldQueue
                 [
                     'job_id' => $this->job->getJobId(),
                 ],
-                'sellouter-success'
+                'sellouter'
             );
         } catch (\Exception $e) {
             // Log dell'errore con dettagli
@@ -79,7 +79,7 @@ class DownloadCollectionsDataJob implements ShouldQueue
                     'linea'  => $e->getLine(),
                     'trace'  => $e->getTraceAsString(),
                 ],
-                'sellouter-error'
+                'sellouter'
             );
         }
     }

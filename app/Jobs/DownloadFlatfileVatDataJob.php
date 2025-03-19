@@ -41,12 +41,12 @@ class DownloadFlatfileVatDataJob implements ShouldQueue
         ResponseHandler::info(
             'Job DownloadFlatfileVatDataJob avviato',
             [],
-            'sellouter-info'
+            'sellouter'
         );
 
         try {
             // Avvio del download dei dati dall'API
-            ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter-info');
+            ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter');
 
             // Chiamata alla funzione desiderata
             $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
@@ -55,7 +55,7 @@ class DownloadFlatfileVatDataJob implements ShouldQueue
             ResponseHandler::success(
                 'Job DownloadFlatfileVatDataJob eseguito con successo.',
                 [],
-                'sellouter-success'
+                'sellouter'
             );
         } catch (\Exception $e) {
             // Log dell'errore con dettagli
@@ -67,7 +67,7 @@ class DownloadFlatfileVatDataJob implements ShouldQueue
                     'linea'  => $e->getLine(),
                     'trace'  => $e->getTraceAsString(),
                 ],
-                'sellouter-error'
+                'sellouter'
             );
         }
     }
