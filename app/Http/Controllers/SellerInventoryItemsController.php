@@ -43,7 +43,9 @@ class SellerInventoryItemsController extends Controller
     {
         try {
             $jwksUrl = env('JWKS_URL');
-            $client = new Client();
+            $client = new Client([
+                'verify' => false, // o path al certificato della CA interna
+            ]);
             $response = $client->get($jwksUrl);
             $jwks = json_decode($response->getBody(), true);
             $publicKeys = JWK::parseKeySet($jwks);
