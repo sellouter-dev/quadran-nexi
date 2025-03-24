@@ -5,7 +5,7 @@ namespace App\Services;
 use Exception;
 use App\Models\SellerInventoryItem;
 use App\Services\DataGeneratorAmazon;
-use App\Models\AmazonSpReportAmazonvatcalculation;
+use App\Models\AmazonSpReportAmazonVatTransaction;
 use App\Models\AmazonSpReportFlatfilev2settlement;
 use App\Models\AmazonSpReportFlatfilevatinvoicedatavidr;
 
@@ -137,7 +137,8 @@ class APIDataFetcherService
             $totalRecords = count($response);
 
             foreach ($response as $row) {
-                AmazonSpReportAmazonvatcalculation::saveData($row);
+                // AmazonSpReportAmazonvatcalculation::saveData($row);
+                AmazonSpReportAmazonVatTransaction::saveData($row);
             }
 
             ResponseHandler::success('Dati Flatfile VAT Invoice recuperati e salvati con successo', ['totale_salvati' => $totalRecords], 'sellouter');

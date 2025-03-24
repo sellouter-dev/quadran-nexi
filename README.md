@@ -27,9 +27,9 @@ I comandi devono essere eseguiti nell'ordine riportato per garantire una corrett
 
 ---
 
-## 📌 1. Download dati per AmazonSpReportAmazonvatcalculation
+## 📌 1. Download dati per AmazonSpReportAmazonVatTransaction
 
-Questo comando riempie la tabella `AmazonSpReportAmazonvatcalculation`, che verrà utilizzata come join nei comandi successivi. **Non genera alcun file CSV**, ma serve solo a popolare i dati necessari.
+Questo comando riempie la tabella `AmazonSpReportAmazonVatTransaction`, che verrà utilizzata come join nei comandi successivi. **Non genera alcun file CSV**, ma serve solo a popolare i dati necessari.
 
 ```sh
 php artisan app:download-flatfile-vat-data
@@ -43,7 +43,7 @@ Questo comando popola la tabella `AmazonSpReportFlatfilev2settlement` e genera i
 
 **`FlatFileSettlement_timestamp.csv`**
 
-Il comando utilizza anche la tabella `AmazonSpReportAmazonvatcalculation` tramite una `JOIN`.
+Il comando utilizza anche la tabella `AmazonSpReportAmazonVatTransaction` tramite una `JOIN`.
 
 ```sh
 php artisan app:download-collections-data-command
@@ -81,7 +81,7 @@ php artisan app:download-data-calculation-computed-command
 
 Per garantire il corretto funzionamento, eseguire i comandi in questo ordine:
 
-1. **Download dati AmazonSpReportAmazonvatcalculation**
+1. **Download dati AmazonSpReportAmazonVatTransaction**
     ```sh
     php artisan app:download-flatfile-vat-data
     ```
@@ -103,21 +103,26 @@ Per garantire il corretto funzionamento, eseguire i comandi in questo ordine:
 🔹 **Nota:** Assicurarsi che ogni comando venga completato con successo prima di eseguire il successivo, per evitare errori nei dati generati. 🚀
 
 I comandi devono essere eseguiti nell'ordine riportato, per garantire una corretta presa dei dati
-**Comando che permette di riempire la tabella AmazonSpReportAmazonvatcalculation che viene utilizzata come join nel prossimo comando, il comando in questione non genererà nessun file csv, ma riempirà solo la tabella**
+**Comando che permette di riempire la tabella AmazonSpReportAmazonVatTransaction che viene utilizzata come join nel prossimo comando, il comando in questione non genererà nessun file csv, ma riempirà solo la tabella**
 
 > php artisan app:download-flatfile-vat-data
 
-**Comando per riempire la tabella AmazonSpReportFlatfilev2settlement, e permette di generare il file csv chiamato: _FlatFileSettlement_timestamp_ utilizzando anche la tabella AmazonSpReportAmazonvatcalculation trmite Join**
+**Comando per riempire la tabella AmazonSpReportFlatfilev2settlement, e permette di generare il file csv chiamato: _FlatFileSettlement_timestamp_ utilizzando anche la tabella AmazonSpReportAmazonVatTransaction trmite Join**
 
 > php artisan app:download-collections-data-command
 
-**Comando utilizzato per riempire la tabella AmazonSpReportFlatfilevatinvoicedatavidr e generare il file csv chiamato Flatfilevatinvoicedata_timestamp**.
+**GENERAZIONE FILE PAGAMENTI**
+**Comando utilizzato per riempire la tabella AmazonSpReportFlatfilevatinvoicedatavidr e generare il file csv chiamato Payment_timestamp**.
 
 > php artisan app:download-flatfile-vat-invoice-data-command
 
-**Comando che permette di generare il file csv chiamato _InvoiceTrack_timestamp_ prendendo i dati dalla tabella AmazonSpReportFlatfilevatinvoicedatavidr**
+**GENERAZIONE FILE ANAGRAFICHE**
+**Comando che permette di generare il file csv chiamato Personal_Data_timestamp prendendo i dati dalla tabella AmazonSpReportFlatfilevatinvoicedatavidr**
 
 > php artisan app:download-data-calculation-computed-command
+
+**GENERAZIONE FILE TRANSAZIONI**
+**Comando che permette di generare il file csv chiamato Transaction_timestamp i dati dalla tabella AmazonSpReportFlatfilevatinvoicedatavidr**
 
 ## 📌 Comando `app:download-collections-data-command`
 

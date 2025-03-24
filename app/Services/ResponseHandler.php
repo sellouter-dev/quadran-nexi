@@ -23,7 +23,7 @@ class ResponseHandler
             'status' => $status->value,
             'description' => $message,
             'data' => $data,
-            'timestamp' => now()->toIso8601String()
+            'log_time' => now()->toIso8601String()
         ];
 
         // Log in formato JSON sul canale specificato

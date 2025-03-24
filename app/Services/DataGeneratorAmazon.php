@@ -132,7 +132,7 @@ class DataGeneratorAmazon
             }
 
             $body = $response->getBody()->getContents();
-            ResponseHandler::success("Chiamata API eseguita con successo", ['url' => $apiUrl, 'body' => $body], 'sellouter');
+            ResponseHandler::success("Chiamata API eseguita con successo", ['url' => $apiUrl], 'sellouter');
             return json_decode($body, true);
         } catch (RequestException $e) {
             $response = $e->getResponse();
