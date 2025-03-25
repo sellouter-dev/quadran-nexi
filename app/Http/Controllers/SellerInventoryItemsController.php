@@ -34,22 +34,83 @@ class SellerInventoryItemsController extends Controller
     private $requiredScope = 'Tech_SapSellouter';
 
     /**
-     * Recupera le chiavi pubbliche dal JWKS.
+     * Estrae l'header JWT dal token.
      *
-     * @return array Le chiavi pubbliche.
-     * @throws \Exception In caso di errore nel recupero delle chiavi.
+     * @param string $jwt Il token
+     * @return array L'header JWT
+     * @throws \Exception In caso di errore nell'estrazione dell'header.
      */
-    private function getPublicKeys()
+    private function extractJwtHeader($jwt)
     {
         try {
+            $parts = explode('.', $jwt);
+            if (count($parts) < 2) {
+                throw new \Exception('JWT non valido');
+            }
+
+            $header = json_decode(base64_decode(strtr($parts[0], '-_', '+/')), true);
+            return $header;
+        } catch (\Exception $e) {
+            ResponseHandler::error("Errore durante l'estrazione dell'header JWT", [
+                'errore' => $e->getMessage(),
+                'file'   => $e->getFile(),
+                'linea'  => $e->getLine()
+            ], 'inventory');
+            throw $e;
+        }
+    }
+
+    /**
+     * Recupera le chiavi pubbliche dal JWKS e restituisce solo quella associata al token.
+     *
+     * @param string $jwt Il token JWT da cui estrarre kid e alg.
+     * @return array La chiave pubblica da usare per la validazione.
+     * @throws \Exception In caso di errore nel recupero o parsing delle chiavi.
+     */
+    private function getPublicKeys($jwt)
+    {
+        try {
+            // Estrai header
+            $header = $this->extractJwtHeader($jwt);
+            $kid = $header['kid'] ?? null;
+            $alg = $header['alg'] ?? 'RS512';
+
+            if (!$kid) {
+                throw new \Exception('kid non presente nel JWT');
+            }
+
+            // Recupera JWKS
             $jwksUrl = env('JWKS_URL');
-            $client = new Client([
-                'verify' => false, // o path al certificato della CA interna
-            ]);
+            $client = new Client(['verify' => false]);
             $response = $client->get($jwksUrl);
             $jwks = json_decode($response->getBody(), true);
-            $publicKeys = JWK::parseKeySet($jwks);
-            ResponseHandler::success("Chiavi pubbliche recuperate correttamente dal JWKS", [], 'inventory');
+
+            ResponseHandler::info("Recupero delle chiavi pubbliche dal JWKS", ['jwks' => $jwks], 'inventory');
+
+            // Cerca la chiave con lo stesso kid
+            foreach ($jwks['keys'] as &$key) {
+                if (!isset($key['alg'])) {
+                    $key['alg'] = $alg; // aggiunge dinamicamente l'alg
+                }
+            }
+
+            // Crea solo il sottoinsieme di chiavi che servono
+            $filteredJwks = [
+                'keys' => array_values(array_filter($jwks['keys'], fn($k) => $k['kid'] === $kid))
+            ];
+
+            if (empty($filteredJwks['keys'])) {
+                throw new \Exception("Nessuna chiave trovata per kid: $kid");
+            }
+
+            $publicKeys = JWK::parseKeySet($filteredJwks);
+
+            ResponseHandler::success("Chiavi pubbliche filtrate e recuperate correttamente", [
+                'kid' => $kid,
+                'alg' => $alg,
+                'keys_found' => count($filteredJwks['keys'])
+            ], 'inventory');
+
             return $publicKeys;
         } catch (\Exception $e) {
             ResponseHandler::error("Errore nel recupero delle chiavi pubbliche dal JWKS", [
@@ -70,9 +131,9 @@ class SellerInventoryItemsController extends Controller
     private function validateToken($token)
     {
         try {
-            $publicKeys = $this->getPublicKeys();
+            $publicKeys = $this->getPublicKeys($token);
             $decoded = JWT::decode($token, $publicKeys);
-
+            ResponseHandler::info("Token JWT decodificato correttamente", ['token' => $token], 'inventory');
             if ($decoded->exp < time()) {
                 ResponseHandler::error("JWT scaduto", ['exp' => $decoded->exp, 'adesso' => time()], 'inventory');
                 return response()->json(['error' => 'ERROR 9020: JWT expired'], 401);
