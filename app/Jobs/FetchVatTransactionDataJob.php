@@ -10,7 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-class DownloadFlatfileVatDataJob implements ShouldQueue
+class FetchVatTransactionDataJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -49,7 +49,7 @@ class DownloadFlatfileVatDataJob implements ShouldQueue
             ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter');
 
             // Chiamata alla funzione desiderata
-            $this->apiDataFetcherService->fetchAndStoreFlatfileVatData();
+            $this->apiDataFetcherService->fetchAndStoreVatTransactionData();
 
             // Completamento del job con successo
             ResponseHandler::success(

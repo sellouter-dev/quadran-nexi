@@ -7,14 +7,14 @@ use App\Services\ResponseHandler;
 use App\Services\APIDataFetcherService;
 use App\Services\CsvDataGeneratorService;
 
-class DownloadDataCalculationComputedCommand extends Command
+class GenerateCsvTransactionCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:download-data-calculation-computed-command';
+    protected $signature = 'app:generate-csv-transaction';
 
     /**
      * La descrizione del comando Artisan.
@@ -56,14 +56,14 @@ class DownloadDataCalculationComputedCommand extends Command
      */
     public function handle()
     {
-        ResponseHandler::info('Command data:download-calculation started', [], 'info_log');
+        ResponseHandler::info('Command app:generate-csv-transaction started', [], 'info_log');
 
         try {
             // Avvio del download dei dati
             $this->info('Starting calculation data download...');
             ResponseHandler::info('Starting data calculation download', [], 'info_log');
 
-            $this->csvDataGeneratorService->generateInvoiceCSV();
+            $this->csvDataGeneratorService->generateTransactionCSV();
 
             // Completamento con successo
             $this->info('Data calculation download completed successfully.');
@@ -73,7 +73,7 @@ class DownloadDataCalculationComputedCommand extends Command
         } catch (\Exception $e) {
             // Log dell'errore con dettagli
             $this->error('Error occurred during data calculation download.');
-            ResponseHandler::error('Error executing data:download-calculation command', [
+            ResponseHandler::error('Error executing app:generate-csv-transaction command', [
                 'error' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),

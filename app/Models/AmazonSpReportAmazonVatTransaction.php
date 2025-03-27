@@ -75,9 +75,9 @@ class AmazonSpReportAmazonVatTransaction extends Model
         'departure_post_code',
         'depature_city',
         'export_outside_eu',
-        'gift_wrap_amt_vat_excl',
-        'gift_wrap_amt_vat_incl',
-        'gift_wrap_vat_amt',
+        'gift_wrap_amt_vat_excl', // gift_wrap_vat_excl_amount
+        'gift_wrap_amt_vat_incl', // gift_wrap_vat_incl_amount
+        'gift_wrap_vat_amt', // gift_wrap_vat_amount
         'gift_wrap_vat_rate_percent',
         'invoice_url',
         'item_description',
@@ -85,21 +85,24 @@ class AmazonSpReportAmazonVatTransaction extends Model
         'item_qty_supplementary_unit',
         'item_weight',
         'marketplace',
-        'price_of_items_amt_vat_excl',
-        'price_of_items_amt_vat_incl',
-        'price_of_items_vat_amt',
+        'price_of_items_amt_vat_excl', // item_vat_excl_amount
+        'price_of_items_amt_vat_incl', // item_vat_incl_amount
+        'price_of_items_vat_amt', // item_vat_amount
         'price_of_items_vat_rate_percent',
         'product_tax_code',
         'program_type',
-        'promo_gift_wrap_amt_vat_excl',
-        'promo_gift_wrap_amt_vat_incl',
-        'promo_gift_wrap_vat_amt',
-        'promo_price_of_items_amt_vat_excl',
-        'promo_price_of_items_amt_vat_incl',
-        'promo_price_of_items_vat_amt',
-        'promo_ship_charge_amt_vat_excl',
-        'promo_ship_charge_amt_vat_incl',
-        'promo_ship_charge_vat_amt',
+        'promo_gift_wrap_amt_vat_excl',        // gift_promo_vat_excl_amount
+        'promo_gift_wrap_amt_vat_incl',        // gift_promo_vat_incl_amount
+        'promo_gift_wrap_vat_amt',             // gift_promo_vat_amount
+
+        'promo_price_of_items_amt_vat_excl',   // item_promo_vat_excl_amount
+        'promo_price_of_items_amt_vat_incl',   // item_promo_vat_incl_amount
+        'promo_price_of_items_vat_amt',        // item_promo_vat_amount
+
+        'promo_ship_charge_amt_vat_excl',      // shipping_promo_vat_excl_amount
+        'promo_ship_charge_amt_vat_incl',      // shipping_promo_vat_incl_amount
+        'promo_ship_charge_vat_amt',           // shipping_promo_vat_amount
+
         'qty',
         'requesttime',
         'sale_arrival_country',
@@ -110,9 +113,10 @@ class AmazonSpReportAmazonVatTransaction extends Model
         'seller_depart_country_vat_number',
         'seller_depart_vat_number_country',
         'seller_sku',
-        'ship_charge_amt_vat_excl',
-        'ship_charge_amt_vat_incl',
-        'ship_charge_vat_amt',
+        'ship_charge_amt_vat_excl',            // shipping_vat_excl_amount
+        'ship_charge_amt_vat_incl',            // shipping_vat_incl_amount
+        'ship_charge_vat_amt',                 // shipping_vat_amount
+
         'ship_charge_vat_rate_percent',
         'statistical_code_arrival',
         'statistical_code_depart',
@@ -224,8 +228,10 @@ class AmazonSpReportAmazonVatTransaction extends Model
 
         self::updateOrCreate(
             [
+                "transaction_event_id" => $mappedData["transaction_event_id"],
+                "activity_period" => $mappedData["activity_period"],
+                "seller_sku" => $mappedData["seller_sku"],
                 "activity_transaction_id" => $mappedData["activity_transaction_id"],
-                "buyer_vat_number" => $mappedData["buyer_vat_number"],
             ],
             $mappedData
         );

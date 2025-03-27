@@ -11,7 +11,7 @@ use App\Services\CsvDataGeneratorService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
-class DownloadDataCalculationComputedJob implements ShouldQueue
+class GenerateTransactionCsvJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -64,7 +64,7 @@ class DownloadDataCalculationComputedJob implements ShouldQueue
                 'sellouter'
             );
 
-            $this->csvDataGeneratorService->generateInvoiceCSV();
+            $this->csvDataGeneratorService->generateTransactionCSV();
 
 
             // Step 2: Completamento del job con successo

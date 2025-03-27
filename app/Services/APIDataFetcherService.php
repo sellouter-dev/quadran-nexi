@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use Exception;
+use Carbon\Carbon;
+use App\Models\DepositDateHistory;
 use App\Models\SellerInventoryItem;
 use App\Services\DataGeneratorAmazon;
 use App\Models\AmazonSpReportAmazonVatTransaction;
 use App\Models\AmazonSpReportFlatfilev2settlement;
 use App\Models\AmazonSpReportFlatfilevatinvoicedatavidr;
+use AWS\CRT\HTTP\Response;
 
 class APIDataFetcherService
 {
@@ -99,7 +102,7 @@ class APIDataFetcherService
      *
      * @return void
      */
-    public function fetchAndStoreInvoiceData()
+    public function fetchAndStoreInvoiceDataVidr()
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
@@ -126,7 +129,7 @@ class APIDataFetcherService
      *
      * @return void
      */
-    public function fetchAndStoreFlatfileVatData()
+    public function fetchAndStoreVatTransactionData()
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
@@ -154,7 +157,7 @@ class APIDataFetcherService
      *
      * @return void
      */
-    public function fetchAndStoreCollectionData()
+    public function fetchAndStoreFlatfilev2()
     {
         ini_set('memory_limit', '-1');
         ini_set('max_execution_time', '0');
@@ -163,7 +166,20 @@ class APIDataFetcherService
         try {
             $response = $this->dataGenerator->callCollectionsDataApi();
             $totalRecords = count($response);
+            ResponseHandler::info('Elaborazione dei dati delle collections', ['totale_record' => $totalRecords], 'sellouter');
             foreach ($response as $row) {
+                $depositDate = Carbon::parse($row['deposit_date'])->format('Y-m-d H:i:s');
+
+                $alreadyExists = DepositDateHistory::where('deposit_date', $depositDate)->exists();
+
+                if (!$alreadyExists) {
+                    DepositDateHistory::create([
+                        'deposit_date' => $depositDate,
+                        'created_at' => now(),
+                    ]);
+                }
+                ResponseHandler::info('Data di deposito non presente nel database', ['data_deposito' => $depositDate], 'sellouter');
+
                 AmazonSpReportFlatfilev2settlement::saveData($row);
             }
 

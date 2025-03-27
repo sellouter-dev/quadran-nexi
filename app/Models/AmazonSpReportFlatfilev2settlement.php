@@ -93,8 +93,11 @@ class AmazonSpReportFlatfilev2settlement extends Model
         self::updateOrCreate(
             [
                 "order_id" => $mappedData["order_id"],
-                "amount_description" => $mappedData["amount_description"],
+                "sku" => $mappedData["sku"],
+                "settlement_id" => $mappedData["settlement_id"],
+                "posted_date" => $mappedData["posted_date"],
                 "amount" => $mappedData["amount"],
+                "amount_description" => $mappedData["amount_description"],
             ],
             $mappedData
         );
