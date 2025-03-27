@@ -46,6 +46,8 @@ class FileEncryptionService
             }
 
             $this->gnupg = new gnupg();
+            $this->gnupg->seterrormode(gnupg::ERROR_EXCEPTION);
+            $this->gnupg->setarmor(false);
             $this->importPublicKey();
         } catch (Exception $e) {
             ResponseHandler::error(
