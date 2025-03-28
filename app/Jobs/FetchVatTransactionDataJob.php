@@ -22,16 +22,6 @@ class FetchVatTransactionDataJob implements ShouldQueue
     protected $apiDataFetcherService;
 
     /**
-     * Crea una nuova istanza del job.
-     *
-     * @return void
-     */
-    public function __construct(APIDataFetcherService $apiDataFetcherService)
-    {
-        $this->apiDataFetcherService = $apiDataFetcherService;
-    }
-
-    /**
      * Esegue il job.
      *
      * @return void
@@ -47,7 +37,7 @@ class FetchVatTransactionDataJob implements ShouldQueue
         try {
             // Avvio del download dei dati dall'API
             ResponseHandler::info('Avvio del download dei dati dall\'API', [], 'sellouter');
-
+            $this->apiDataFetcherService = new APIDataFetcherService();
             // Chiamata alla funzione desiderata
             $this->apiDataFetcherService->fetchAndStoreVatTransactionData();
 

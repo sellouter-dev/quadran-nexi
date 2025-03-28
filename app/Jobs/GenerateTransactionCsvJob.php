@@ -23,24 +23,6 @@ class GenerateTransactionCsvJob implements ShouldQueue
     protected $csvDataGeneratorService;
 
     /**
-     * Il servizio APIDataFetcherService per la gestione dei dati.
-     *
-     * @var APIDataFetcherService
-     */
-    protected $apiDataFetcherService;
-
-    /**
-     * Crea una nuova istanza del job.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->csvDataGeneratorService = new CsvDataGeneratorService();
-        $this->apiDataFetcherService = new APIDataFetcherService();
-    }
-
-    /**
      * Esegue il job.
      *
      * @return void
@@ -64,8 +46,8 @@ class GenerateTransactionCsvJob implements ShouldQueue
                 'sellouter'
             );
 
+            $this->csvDataGeneratorService = new CsvDataGeneratorService();
             $this->csvDataGeneratorService->generateTransactionCSV();
-
 
             // Step 2: Completamento del job con successo
             ResponseHandler::success(

@@ -16,11 +16,6 @@ class FetchFlatfilev2Job implements ShouldQueue
 
     protected $apiDataFetcherService;
 
-    public function __construct()
-    {
-        $this->apiDataFetcherService = new APIDataFetcherService();
-    }
-
     public function handle()
     {
         ResponseHandler::info(
@@ -34,6 +29,7 @@ class FetchFlatfilev2Job implements ShouldQueue
 
         try {
             ResponseHandler::info('Download dati dall\'API in corso...', [], 'sellouter');
+            $this->apiDataFetcherService = new APIDataFetcherService();
             $this->apiDataFetcherService->fetchAndStoreFlatfilev2();
 
             ResponseHandler::success(

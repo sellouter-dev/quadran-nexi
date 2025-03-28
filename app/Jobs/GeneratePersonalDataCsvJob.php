@@ -16,11 +16,6 @@ class GeneratePersonalDataCsvJob implements ShouldQueue
 
     protected $csvDataGeneratorService;
 
-    public function __construct()
-    {
-        $this->csvDataGeneratorService = new CsvDataGeneratorService();
-    }
-
     public function handle()
     {
         ResponseHandler::info(
@@ -34,6 +29,7 @@ class GeneratePersonalDataCsvJob implements ShouldQueue
 
         try {
             ResponseHandler::info('Generazione CSV per dati VAT Invoice in corso...', [], 'sellouter');
+            $this->csvDataGeneratorService = new CsvDataGeneratorService();
             $this->csvDataGeneratorService->generatePersonalDataCSV();
 
             ResponseHandler::success(

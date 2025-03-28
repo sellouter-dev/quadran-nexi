@@ -15,23 +15,6 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
-     * Il servizio APIDataFetcherService per il salvataggio dei dati.
-     *
-     * @var APIDataFetcherService
-     */
-    protected $apiDataFetcherService;
-
-    /**
-     * Crea una nuova istanza del job.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->apiDataFetcherService = new APIDataFetcherService();
-    }
-
-    /**
      * Esegue il job.
      *
      * @return void
@@ -54,7 +37,9 @@ class SaveSellerInventoryItemsJob implements ShouldQueue
                 'sellouter'
             );
 
-            $this->apiDataFetcherService->fetchAndSaveDataSellerInventoryItemsApi();
+            // Istanzia il servizio direttamente nel metodo handle()
+            $apiDataFetcherService = new APIDataFetcherService();
+            $apiDataFetcherService->fetchAndSaveDataSellerInventoryItemsApi();
 
             ResponseHandler::success(
                 'Job SaveSellerInventoryItemsJob eseguito con successo.',

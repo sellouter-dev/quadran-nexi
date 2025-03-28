@@ -16,10 +16,6 @@ class FetchInvoiceDataVidrJob implements ShouldQueue
 
     protected $apiDataFetcherService;
 
-    public function __construct()
-    {
-        $this->apiDataFetcherService = new APIDataFetcherService();
-    }
 
     public function handle()
     {
@@ -34,6 +30,7 @@ class FetchInvoiceDataVidrJob implements ShouldQueue
 
         try {
             ResponseHandler::info('Avvio del download dei dati Flatfile VAT Invoice', [], 'sellouter');
+            $this->apiDataFetcherService = new APIDataFetcherService();
             $this->apiDataFetcherService->fetchAndStoreInvoiceDataVidr();
 
             ResponseHandler::success(

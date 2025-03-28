@@ -16,10 +16,6 @@ class GeneratePaymentCsvJob implements ShouldQueue
 
     protected $csvDataGeneratorService;
 
-    public function __construct()
-    {
-        $this->csvDataGeneratorService = new CsvDataGeneratorService();
-    }
 
     public function handle()
     {
@@ -34,6 +30,7 @@ class GeneratePaymentCsvJob implements ShouldQueue
 
         try {
             ResponseHandler::info('Generazione CSV in corso...', [], 'sellouter');
+            $this->csvDataGeneratorService = new CsvDataGeneratorService();
             $this->csvDataGeneratorService->generatePaymentCSV();
 
             ResponseHandler::success(
