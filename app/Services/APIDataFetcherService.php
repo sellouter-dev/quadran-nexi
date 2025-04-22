@@ -10,7 +10,6 @@ use App\Services\DataGeneratorAmazon;
 use App\Models\AmazonSpReportAmazonVatTransaction;
 use App\Models\AmazonSpReportFlatfilev2settlement;
 use App\Models\AmazonSpReportFlatfilevatinvoicedatavidr;
-use AWS\CRT\HTTP\Response;
 
 class APIDataFetcherService
 {
@@ -140,7 +139,6 @@ class APIDataFetcherService
             $totalRecords = count($response);
 
             foreach ($response as $row) {
-                // AmazonSpReportAmazonvatcalculation::saveData($row);
                 AmazonSpReportAmazonVatTransaction::saveData($row);
             }
 
@@ -168,7 +166,7 @@ class APIDataFetcherService
             $totalRecords = count($response);
             ResponseHandler::info('Elaborazione dei dati delle collections', ['totale_record' => $totalRecords], 'sellouter');
             foreach ($response as $row) {
-                $depositDate = Carbon::parse($row['deposit_date'])->format('Y-m-d H:i:s');
+                $depositDate = Carbon::parse($row['deposit_date'])->format('Y-m-d');
 
                 $alreadyExists = DepositDateHistory::where('deposit_date', $depositDate)->exists();
 
@@ -178,7 +176,6 @@ class APIDataFetcherService
                         'created_at' => now(),
                     ]);
                 }
-                ResponseHandler::info('Data di deposito non presente nel database', ['data_deposito' => $depositDate], 'sellouter');
 
                 AmazonSpReportFlatfilev2settlement::saveData($row);
             }

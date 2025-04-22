@@ -140,7 +140,7 @@ class AmazonSpReportFlatfilevatinvoicedatavidr extends Model
             'buyer_e_invoice_account_id' => $data['buyer_e_invoice_account_id'] ?? null,
             'buyer_name' => $data['buyer_name'] ?? null,
             'buyer_tax_registration_type' => $data['buyer_tax_registration_type'] ?? null,
-            'buyer_vat_number' => $data['buyer_vat_number'] ?? null,
+            'buyer_vat_number' => $data['buyer_vat_number_divr'] ?? null,
             'citation_de' => $data['citation_de'] ?? null,
             'citation_en' => $data['citation_en'] ?? null,
             'citation_es' => $data['citation_es'] ?? null,

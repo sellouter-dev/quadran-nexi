@@ -35,16 +35,15 @@ class GenerateCsvPaymentCommand extends Command
             foreach ($dates as $dateEntry) {
                 $depositDate = Carbon::parse($dateEntry->deposit_date);
                 if ($depositDate->diffInDays($today) >= 40) {
-                    $this->info("Generazione CSV per deposit_date: " . $depositDate->toDateString());
-
-                    // Passa la data al metodo e genera il CSV
-                    $this->csvDataGeneratorService->generatePaymentCSV($depositDate);
-
-                    // Rimuove la deposit_date dal database
-                    $dateEntry->delete();
-
-                    $this->info("Eliminata deposit_date: " . $depositDate->toDateString());
                 }
+                $this->info("Generazione CSV per deposit_date: " . $depositDate->toDateString());
+                // Passa la data al metodo e genera il CSV
+                $this->csvDataGeneratorService->generatePaymentCSV($depositDate);
+
+                // Rimuove la deposit_date dal database
+                $dateEntry->delete();
+
+                $this->info("Eliminata deposit_date: " . $depositDate->toDateString());
             }
 
             ResponseHandler::success('Comando completato con successo', [], 'success_log');

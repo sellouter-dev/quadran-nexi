@@ -113,7 +113,7 @@ php artisan app:save-seller-inventory-items-command
 3. `php artisan app:fetch-invoice-data-vidr`
 4. `php artisan app:generate-csv-payment`
 5. `php artisan app:generate-csv-personaldata`
-6. `php artisan app:download-data-calculation-computed-command`
+6. `php artisan app:generate-csv-transaction`
 
 ---
 

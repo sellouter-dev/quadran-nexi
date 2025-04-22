@@ -18,13 +18,21 @@ class ResponseHandler
         $this->message = $message;
         $this->data = $data;
         $this->channel = $channel;
+        if (count($data) > 0) {
+            $logData = [
+                'status' => $status->value,
+                'description' => $message,
+                'data' => $data,
+                'log_time' => now()->toIso8601String()
+            ];
+        } else {
+            $logData = [
+                'status' => $status->value,
+                'description' => $message,
+                'log_time' => now()->toIso8601String()
+            ];
+        }
 
-        $logData = [
-            'status' => $status->value,
-            'description' => $message,
-            'data' => $data,
-            'log_time' => now()->toIso8601String()
-        ];
 
         // Log in formato JSON sul canale specificato
         if ($channel) {

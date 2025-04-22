@@ -46,7 +46,6 @@ class GenerateCsvTransactionCommand extends Command
     {
         parent::__construct();
         $this->csvDataGeneratorService = new CsvDataGeneratorService();
-        $this->apiDataFetcherService = new APIDataFetcherService();
     }
 
     /**
