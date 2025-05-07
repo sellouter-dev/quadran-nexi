@@ -58,7 +58,6 @@ class CsvDataGeneratorService
             ResponseHandler::info('generateTransactionCSV - inizio elaborazione record', [], 'csv');
             $previousMonth = Carbon::now()->subMonth();
             $previousMonthString = $previousMonth->format('Y') . '-' . Str::upper($previousMonth->format('M'));
-            $previousMonthString = "2025-MAR";
             $results = AmazonSpReportAmazonVatTransaction::select('*')
                 ->where('amazon_sp_report_amazonvattransactions.activity_period', $previousMonthString)
                 ->whereNotIn('amazon_sp_report_amazonvattransactions.transaction_type', ['FC_TRANSFER', 'RETURN'])->get();
@@ -66,6 +65,11 @@ class CsvDataGeneratorService
                 $tipoRegistrazione = (empty($row->buyer_tax_registration_type))
                     ? 'Corrispettivo'
                     : $row->buyer_tax_registration_type;
+
+                if ($tipoRegistrazione == 'Corrispettivo' && ($row->taxable_jurisdiction != 'ITALY' || $row->price_of_items_vat_rate_percent == 0)) {
+                    $tipoRegistrazione = 'VAT';
+                }
+
                 $buyerVatNumber = $row->buyer_vat_number;
 
                 $shipmentDate = Carbon::parse($row->transaction_complete_date)
