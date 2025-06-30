@@ -40,6 +40,30 @@ class CsvDataGeneratorService
         $this->fileEncryptionService = new FileEncryptionService();
     }
 
+    private function handleCsvOutput(array $data, string $fileName, string $logLabel)
+    {
+        $filePath = storage_path("/app/temp/{$fileName}");
+        $result = null;
+
+        if (count($data) !== 0) {
+            $result = $this->streamCSV($data, $filePath);
+
+            ResponseHandler::success(
+                "CSV per {$logLabel} generato con successo",
+                ['file' => $fileName],
+                'csv'
+            );
+        } else {
+            ResponseHandler::info(
+                "Non è stato generato alcun file per mancanza di dati sul file {$fileName}",
+                [],
+                'csv'
+            );
+        }
+
+        return $result;
+    }
+
     /**
      * TODO:
      * Genera il CSV per i dati delle InvoiceTrack. Transazione(Inviato ogni 4 del mese)
@@ -98,12 +122,11 @@ class CsvDataGeneratorService
                     'buyer_vat_number'           => $buyerVatNumber,
                 ];
             }
+            // Salvataggio CSV
+            $fileDate = Carbon::today()->format('dmY');
+            $fileName = "AMZN_fatt_{$fileDate}.csv";
 
-            $filePath = storage_path('/app/temp/Transaction_' . Carbon::today()->format('dmY') . '.csv');
-            $result = $this->streamCSV($data, $filePath);
-
-            ResponseHandler::success('CSV per Transaction_ generato con successo', ['file' => 'Transaction.csv'], 'csv');
-            return $result;
+            return $this->handleCsvOutput($data, $fileName, 'Transaction');
         } catch (Exception $e) {
             ResponseHandler::error('Errore durante la generazione del CSV per Transaction_', ['errore' => $e->getMessage()], 'csv');
             return response()->json(['errore' => $e->getMessage(), 'codice' => $e->getCode()], 500);
@@ -187,15 +210,10 @@ class CsvDataGeneratorService
             }
 
             // Salvataggio CSV
-            $filePath = storage_path('/app/temp/Personal_Data_' . Carbon::today()->format('dmY') . '.csv');
-            $result = $this->streamCSV($data, $filePath);
+            $fileDate = Carbon::today()->format('dmY');
+            $fileName = "AMZN_anag_{$fileDate}.csv";
 
-            ResponseHandler::success(
-                'CSV per Personal_Data generato con successo',
-                ['file' => 'Personal_Data.csv'],
-                'csv'
-            );
-            return $result;
+            return $this->handleCsvOutput($data, $fileName, 'Personal_Data');
         } catch (\Exception $e) {
             ResponseHandler::error(
                 'Errore durante la generazione del CSV per Personal_Data',
@@ -255,13 +273,12 @@ class CsvDataGeneratorService
                     'buyer_vat_number'            => $invoiceDivr->buyer_vat_number ?? '',
                 ];
             }
+            // Salvataggio CSV
 
-            $filename = 'Payment_' . ($filterDepositDate?->format('dmY') ?? Carbon::today()->format('dmY'));
-            $filePath = storage_path("/app/temp/{$filename}.csv");
-            $result = $this->streamCSV($data, $filePath);
+            $fileDate = $filterDepositDate?->format('dmY') ?? Carbon::today()->format('dmY');
+            $fileName = "AMZN_inc_{$fileDate}.csv";
 
-            ResponseHandler::success('CSV per Payment generato con successo', ['file' => "{$filename}.csv"], 'csv');
-            return $result;
+            return  $this->handleCsvOutput($data, $fileName, 'Payment');
         } catch (Exception $e) {
             ResponseHandler::error('Errore durante la generazione del CSV per Payment', ['errore' => $e->getMessage()], 'csv');
             return response()->json(['errore' => $e->getMessage(), 'codice' => $e->getCode()], 500);
@@ -312,7 +329,7 @@ class CsvDataGeneratorService
         } finally {
             // Rimuove il file temporaneo se esiste
             if (file_exists($filePath)) {
-                // unlink($filePath);
+                unlink($filePath);
             }
         }
     }
