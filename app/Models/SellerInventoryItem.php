@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SellerInventoryItem extends Model
 {
     use HasFactory;
+
+    protected $table = 'seller_inventory_items';
 
     /**
      * The attributes that are mass assignable.
@@ -53,7 +56,7 @@ class SellerInventoryItem extends Model
             'customer_shipments' => 'integer',
             'customer_returns' => 'integer',
             'vendor_returns' => 'integer',
-            'warehouse_transfer_in/out' => 'integer',
+            'warehouse_transfer_in_out' => 'integer',
             'found' => 'integer',
             'lost' => 'integer',
             'damaged' => 'integer',
@@ -62,5 +65,16 @@ class SellerInventoryItem extends Model
             'ending_warehouse_balance' => 'integer',
             'unknown_events' => 'integer',
         ];
+    }
+
+    /**
+     * Accessor per formattare report_date in YYYY-MM-DD.
+     *
+     * @param  string|null  $value
+     * @return string|null
+     */
+    public function getReportDateAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->toDateString() : null;
     }
 }

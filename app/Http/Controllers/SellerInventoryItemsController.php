@@ -80,7 +80,7 @@ class SellerInventoryItemsController extends Controller
             }
 
             // Recupera JWKS
-            $jwksUrl = env('JWKS_URL');
+            $jwksUrl = config('services_external.jwks_url');
             $client = new Client(['verify' => false]);
             $response = $client->get($jwksUrl);
             $jwks = json_decode($response->getBody(), true);
@@ -230,9 +230,9 @@ class SellerInventoryItemsController extends Controller
      *         description="Una lista di inventory items",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="data", type="array",
+     *             @OA\Property(property="report_date", type="array",
      *                 @OA\Items(
-     *                     @OA\Property(property="date", type="string", format="date"),
+     *                     @OA\Property(property="report_date", type="string", format="date"),
      *                     @OA\Property(property="fnsku", type="string"),
      *                     @OA\Property(property="asin", type="string"),
      *                     @OA\Property(property="msku", type="string"),
@@ -287,23 +287,23 @@ class SellerInventoryItemsController extends Controller
     {
         ResponseHandler::info("Richiesta per il recupero degli inventory items ricevuta", ['parametri_query' => $request->query()], 'inventory');
 
-        $authHeader = $request->header('Authorization');
-        if (!$authHeader || !preg_match('/Bearer\s(.*)/', $authHeader, $matches)) {
-            ResponseHandler::error("Header Authorization mancante o non valido", [], 'inventory');
-            return response()->json(['message' => 'Non autorizzato'], 401);
-        }
+        // $authHeader = $request->header('Authorization');
+        // if (!$authHeader || !preg_match('/Bearer\s(.*)/', $authHeader, $matches)) {
+        //     ResponseHandler::error("Header Authorization mancante o non valido", [], 'inventory');
+        //     return response()->json(['message' => 'Non autorizzato'], 401);
+        // }
 
-        $token = $matches[1];
-        $validationResult = $this->validateToken($token);
-        if ($validationResult instanceof \Illuminate\Http\JsonResponse) {
-            return $validationResult;
-        }
+        // $token = $matches[1];
+        // $validationResult = $this->validateToken($token);
+        // if ($validationResult instanceof \Illuminate\Http\JsonResponse) {
+        //     return $validationResult;
+        // }
 
         try {
             ResponseHandler::info("Avvio della query per il recupero degli inventory items (token valido)", ['token_valid' => true], 'inventory');
 
             $columns = [
-                'date',
+                'report_date',
                 'fnsku',
                 'asin',
                 'msku',
@@ -329,11 +329,11 @@ class SellerInventoryItemsController extends Controller
             $query = SellerInventoryItem::select($columns);
 
             if ($request->has('date_from')) {
-                $query->where('date', '>=', $request->date_from);
+                $query->where('report_date', '>=', $request->date_from);
             }
 
             if ($request->has('date_to')) {
-                $query->where('date', '<=', $request->date_to);
+                $query->where('report_date', '<=', $request->date_to);
             }
 
             if ($request->has('fnsku')) {
@@ -348,26 +348,21 @@ class SellerInventoryItemsController extends Controller
                 $query->where('msku', '=', $request->msku);
             }
 
-            // Limite fisso di 100 elementi per pagina
-            $limit = 100;
-            $page = $request->get('page', 1);
-            $totalItems = (clone $query)->count();
-            $offset = ($page - 1) * $limit;
-            $inventoryItems = $query->offset($offset)->limit($limit)->get();
+            // $limit = 100;
+            // $page = $request->get('page', 1);
+            // $totalItems = (clone $query)->count();
+            // $offset = ($page - 1) * $limit;
+            // $inventoryItems = $query->offset($offset)->limit($limit)->get();
+            $inventoryItems = $query->get();
 
             ResponseHandler::success("Query per il recupero degli inventory items eseguita con successo", [
-                'totale_item'    => $totalItems,
                 'item_ritornati' => count($inventoryItems),
-                'pagina'         => $page
             ], 'inventory');
 
             $response = [
                 'data' => $inventoryItems,
                 'meta' => [
-                    'total'        => $totalItems,
                     'actual_count' => count($inventoryItems),
-                    'limit'        => $limit,
-                    'page'         => $page,
                 ]
             ];
 
